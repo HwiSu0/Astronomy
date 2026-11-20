@@ -6,6 +6,9 @@ import * as A from './astro.js';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const TAU = Math.PI * 2;
+
+// 아래 조작 막대가 가리는 높이 (좁은 화면에서는 두 줄로 늘어난다)
+const barReserve = () => { const b = document.querySelector('.canvas-main .stage-bottom'); return b ? b.offsetHeight + 22 : 70; };
 const AUYR_TO_KMS = 4.740470464;
 
 const PRESETS = [
@@ -70,7 +73,7 @@ function drawMain() {
 
   const { a, e, N } = st;
   const b = a * Math.sqrt(1 - e * e), c = a * e;
-  const usableH = h - 70;
+  const usableH = h - barReserve();
   const s = Math.min((w - 80) / (2 * a), (usableH - 60) / (2 * b));
   const cx0 = w / 2, cy0 = 20 + usableH / 2;
   // 타원 중심이 화면 중앙에 오도록: 초점(태양) = 중심 + (c, 0)

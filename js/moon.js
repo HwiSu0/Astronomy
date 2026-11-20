@@ -6,6 +6,9 @@ import * as A from './astro.js';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const TAU = Math.PI * 2;
+
+// 아래 조작 막대가 가리는 높이 (좁은 화면에서는 두 줄로 늘어난다)
+const barReserve = () => { const b = document.querySelector('.canvas-main .stage-bottom'); return b ? b.offsetHeight + 22 : 70; };
 const TZ = 9, LAT = 37.5665, LON = 126.978;
 
 const params = new URLSearchParams(location.search);
@@ -78,7 +81,7 @@ const dayStart = (jd) => Math.floor(jd + TZ / 24 - 0.5) + 0.5 - TZ / 24; // 그�
 
 // ------------------------------------------------------------------ 뷰 1: 위상과 뜨는 시각
 function drawPhaseView(ctx, w, h, ph) {
-  const usableH = h - 70;
+  const usableH = h - barReserve();
   const cx = w / 2 - 20, cy = 44 + (usableH - 44) / 2;
   const R0 = Math.max(80, Math.min(w * 0.36, (usableH - 70) / 2));
   // 햇빛
@@ -154,12 +157,12 @@ function drawPhaseView(ctx, w, h, ph) {
   ctx.strokeStyle = '#ffa23f'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(cx, cy, 52, 0, -e * A.DEG, true); ctx.stroke();
   label(ctx, `이각 ${e.toFixed(0)}°`, cx + 66 * A.cosd(e / 2), cy - 66 * A.sind(e / 2), '#ffbd73', 'center', 11.5, 700);
-  label(ctx, '북극(황도 북극) 위에서 내려다본 모습 · 지구와 달의 크기·거리는 과장됨', 14, h - 84, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '북극(황도 북극) 위에서 내려다본 모습 · 지구와 달의 크기·거리는 과장됨', 14, h - barReserve() - 14, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
 }
 
 // ------------------------------------------------------------------ 뷰 2: 항성월과 삭망월
 function drawMonthView(ctx, w, h) {
-  const usableH = h - 70;
+  const usableH = h - barReserve();
   const lu = lunation(st.jd);
   const t0 = lu.t0, t1 = t0 + A.SIDEREAL_MONTH, t2 = lu.t1;
   const ref = A.sunPosition(t0).lon + 180; // t0일 때 지구의 일심 황경을 화면 +x로
@@ -210,12 +213,12 @@ function drawMonthView(ctx, w, h) {
   // 현재
   if (st.jd > t0 + 1.5 && st.jd < t1 - 1.5) draw(st.jd, `지금 (${fmtShort(st.jd)})`, '#ffffff', true, 'right');
   label(ctx, '1/S = 1/P☾ − 1/E → 1/29.53 = 1/27.32 − 1/365.26', 14, 62, '#ffe08a', 'left', 13, 700);
-  label(ctx, '지구–달 거리는 실제보다 매우 크게 그림', 14, h - 84, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '지구–달 거리는 실제보다 매우 크게 그림', 14, h - barReserve() - 14, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
 }
 
 // ------------------------------------------------------------------ 뷰 3: 백도와 식 (비스듬히 본 3D)
 function drawEclipseView(ctx, w, h, ph) {
-  const usableH = h - 70;
+  const usableH = h - barReserve();
   const cx = w / 2 - 20, cy = 40 + (usableH - 40) / 2 + 14;
   const Ro = Math.max(80, Math.min(w * 0.25, (usableH - 90) / 0.9));
   const el = 24 * A.DEG, az = -28 * A.DEG;
@@ -276,7 +279,7 @@ function drawEclipseView(ctx, w, h, ph) {
   // 정보
   const dNode = Math.min(Math.abs(A.norm180(sun.lon - m.node)), Math.abs(A.norm180(sun.lon - m.node - 180)));
   label(ctx, `태양과 가까운 교점 사이의 각: ${dNode.toFixed(1)}°  ${dNode < 17 ? '→ 지금은 식 계절 (삭·망 때 식이 일어날 수 있음)' : '→ 식 계절 아님'}`, 14, 62, dNode < 17 ? '#ffe08a' : '#9aa5cc', 'left', 13, 700);
-  label(ctx, '태양이 고정되도록 회전하는 좌표에서 본 모습: 교점선이 약 346.6일(식년)에 한 바퀴 돈다', 14, h - 84, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '태양이 고정되도록 회전하는 좌표에서 본 모습: 교점선이 약 346.6일(식년)에 한 바퀴 돈다', 14, h - barReserve() - 14, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
 }
 
 // ------------------------------------------------------------------ 아래 그래프

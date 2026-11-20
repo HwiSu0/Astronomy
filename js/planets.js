@@ -6,6 +6,9 @@ import * as A from './astro.js';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const TAU = Math.PI * 2;
+
+// 아래 조작 막대가 가리는 높이 (좁은 화면에서는 두 줄로 늘어난다)
+const barReserve = () => { const b = document.querySelector('.canvas-main .stage-bottom'); return b ? b.offsetHeight + 22 : 70; };
 const TZ = 9;
 
 const KEYS = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
@@ -223,7 +226,7 @@ function drawMain() {
 
   const t = state.t, gd = geo(t), S = synodic();
   const geoF = state.frame === 'geo';
-  const usableH = h - 70;
+  const usableH = h - barReserve();
   const cx = w / 2, cy = 34 + (usableH - 34) / 2 + 8;
   const ringR = Math.max(60, Math.min(w / 2, usableH / 2) - 30);
   const a = planetA(), e = isReal() ? A.orbitalElements(state.key, t).e : 0;
@@ -309,8 +312,8 @@ function drawMain() {
     if (ev && !ev.kind.startsWith('stat')) label(ctx, `★ ${ev.name}`, Ps[0], Ps[1] + 26, '#ffffff', 'center', 14, 800);
   }
   // 공전 방향 안내
-  label(ctx, '황도 북극에서 내려다본 모습 · 공전 방향: 시계 반대 방향', 14, h - 98, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
-  label(ctx, '바깥 띠: 황도 12궁 별자리 (무한히 멀다고 가정)', 14, h - 82, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '황도 북극에서 내려다본 모습 · 공전 방향: 시계 반대 방향', 14, h - barReserve() - 28, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '바깥 띠: 황도 12궁 별자리 (무한히 멀다고 가정)', 14, h - barReserve() - 12, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
 }
 
 function drawRetroDiagram(ctx, X, Y, cx, cy, ringR) {
