@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>적경·적위 훈련 · Astronomy Lab</title>
+  <meta name="description" content="실제 하늘에서 적경·적위를 찾고 읽는 훈련, 무작위 계산 문제, 개념 퀴즈.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+  </script>
+  <style>
+    #probArea { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); padding: 22px 26px 60px; z-index: 6; }
+    #probArea .wrap { max-width: 860px; margin: 0 auto; }
+    .target-box { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5; text-align: center; padding: 10px 18px; border-radius: 12px; background: rgba(10, 14, 30, 0.88); border: 1px solid var(--line); backdrop-filter: blur(8px); pointer-events: none; }
+    .target-box .t1 { font-size: 13px; color: var(--muted); }
+    .target-box .t2 { font-size: 22px; font-weight: 800; color: var(--accent2); font-variant-numeric: tabular-nums; }
+    .read-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+    .read-inputs input { width: 100%; }
+    .hist { font-size: 13px; color: var(--muted); }
+    .hist span { display: inline-block; min-width: 26px; text-align: center; padding: 2px 4px; margin: 2px; border-radius: 6px; background: var(--panel2); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html">천구·좌표계</a>
+      <a href="planets.html">행성의 운동</a>
+      <a href="kepler.html">케플러 법칙</a>
+      <a href="training.html" class="on">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+  <main class="lab">
+    <section class="stage">
+      <div id="sky" class="sky"></div>
+      <div class="target-box hidden" id="targetBox"><div class="t1" id="tbTitle"></div><div class="t2" id="tbMain"></div></div>
+      <div class="stage-top" style="top:auto;bottom:70px">
+        <div class="seg small" id="lookSeg">
+          <button data-look="0">북</button><button data-look="90">동</button><button data-look="180">남</button><button data-look="270">서</button><button data-look="zenith">천정</button>
+        </div>
+      </div>
+      <div class="stage-bottom" id="skyBar">
+        <span class="note">드래그: 둘러보기 · 휠/두 손가락: 확대·축소 · 클릭: 위치 선택</span>
+        <div class="clock" id="clock"></div>
+      </div>
+      <div id="probArea" class="hidden"><div class="wrap" id="probWrap"></div></div>
+    </section>
+    <aside class="panel">
+      <nav class="tabs">
+        <button data-mode="find" class="on">하늘에서 찾기</button>
+        <button data-mode="read">좌표 읽기</button>
+        <button data-mode="calc">계산 문제</button>
+        <button data-mode="quiz">개념 퀴즈</button>
+      </nav>
+      <div class="tab on" id="panelBody"></div>
+    </aside>
+  </main>
+  <script type="module" src="js/training.js"></script>
+</body>
+</html>

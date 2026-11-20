@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>천구와 좌표계 실험실 · Astronomy Lab</title>
+  <meta name="description" content="천구, 지평·적도·황도·은하 좌표계를 3D로 탐구하고 위도와 일주 운동을 시뮬레이션합니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html" class="on">천구·좌표계</a>
+      <a href="planets.html">행성의 운동</a>
+      <a href="kepler.html">케플러 법칙</a>
+      <a href="training.html">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+
+  <main class="lab">
+    <section class="stage">
+      <div id="sky" class="sky"></div>
+      <div class="stage-top">
+        <div class="seg" id="viewSeg">
+          <button data-view="outside" class="on" title="천구 밖에서 본 모형">🌐 천구 모형</button>
+          <button data-view="observer" title="관측자가 서서 본 실제 하늘">🔭 관측자 시점</button>
+        </div>
+        <div class="seg small" id="camSeg">
+          <button data-cam="default">기본</button>
+          <button data-cam="south">남쪽에서</button>
+          <button data-cam="east">동쪽에서</button>
+          <button data-cam="top">천정 위에서</button>
+          <button data-cam="polar">천구 북극 위에서</button>
+        </div>
+        <div class="seg small hidden" id="lookSeg">
+          <button data-look="0">북</button>
+          <button data-look="90">동</button>
+          <button data-look="180">남</button>
+          <button data-look="270">서</button>
+          <button data-look="zenith">천정</button>
+          <button data-look="pole">천구 북극</button>
+        </div>
+      </div>
+      <div class="stage-bottom">
+        <button class="btn play" id="btnPlay" title="재생/정지 (Space)">▶</button>
+        <select id="speed" title="시간 흐름 속도">
+          <option value="continuous:60">1분 / 초</option>
+          <option value="continuous:600">10분 / 초</option>
+          <option value="continuous:3600" selected>1시간 / 초</option>
+          <option value="continuous:10800">3시간 / 초</option>
+          <option value="daily:1">매일 같은 시각 · 1일/초</option>
+          <option value="daily:5">매일 같은 시각 · 5일/초</option>
+          <option value="daily:20">매일 같은 시각 · 20일/초</option>
+          <option value="sidereal:2">항성일 간격 · 2일/초</option>
+        </select>
+        <button class="btn small" data-step="-60" title="1시간 전">−1h</button>
+        <button class="btn small" data-step="-10">−10m</button>
+        <button class="btn small" data-step="10">+10m</button>
+        <button class="btn small" data-step="60" title="1시간 후">+1h</button>
+        <button class="btn small" data-step="1440">+1일</button>
+        <div class="clock" id="clock"></div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs">
+        <button data-tab="guide" class="on">학습 가이드</button>
+        <button data-tab="obs">관측 설정</button>
+        <button data-tab="disp">표시</button>
+        <button data-tab="obj">천체 정보</button>
+      </nav>
+
+      <!-- 학습 가이드 -->
+      <div class="tab on guide" id="tab-guide">
+        <div class="guide-nav">
+          <button class="btn small" id="gPrev">◀ 이전</button>
+          <button class="btn small primary" id="gNext">다음 ▶</button>
+          <button class="btn small" id="gApply" title="이 단계의 화면 설정을 다시 적용">↺ 장면 복원</button>
+          <span class="count" id="gCount"></span>
+        </div>
+        <div class="steps" id="gSteps"></div>
+        <div id="gBody"></div>
+      </div>
+
+      <!-- 관측 설정 -->
+      <div class="tab" id="tab-obs">
+        <h3>관측 장소</h3>
+        <div class="field">
+          <select id="loc" style="width:100%"></select>
+        </div>
+        <div class="field">
+          <label for="lat">위도 φ <output id="latOut"></output></label>
+          <input type="range" id="lat" min="-90" max="90" step="0.1">
+          <div class="quick" id="latQuick"></div>
+        </div>
+        <div class="field">
+          <label for="lon">경도 λ (동경 +) <output id="lonOut"></output></label>
+          <input type="range" id="lon" min="-180" max="180" step="0.1">
+        </div>
+        <div class="field row">
+          <span style="font-size:13.5px;color:var(--muted)">시간대 UTC</span>
+          <input type="number" id="tz" min="-12" max="14" step="0.5" style="max-width:80px">
+        </div>
+
+        <h3 style="margin-top:20px">날짜와 시각</h3>
+        <div class="field row">
+          <input type="date" id="date">
+          <button class="btn small" id="btnNow">지금</button>
+          <button class="btn small" id="btnTonight">오늘 21시</button>
+        </div>
+        <div class="field">
+          <label for="time">지방 표준시 <output id="timeOut"></output></label>
+          <input type="range" id="time" min="0" max="1439" step="1">
+        </div>
+        <div class="quick">
+          <button class="btn small" data-date="3-20">춘분 무렵</button>
+          <button class="btn small" data-date="6-21">하지 무렵</button>
+          <button class="btn small" data-date="9-23">추분 무렵</button>
+          <button class="btn small" data-date="12-22">동지 무렵</button>
+        </div>
+        <div class="box readout" id="timeInfo"></div>
+
+        <h3 style="margin-top:20px">궤적</h3>
+        <div class="check-group">
+          <label><input type="checkbox" data-show="trails"> 별의 일주 궤적</label>
+          <label><input type="checkbox" data-show="planetTrails"> 행성 이동 경로</label>
+        </div>
+        <div class="quick">
+          <button class="btn small" id="btnClearTrails">궤적 지우기</button>
+        </div>
+        <p class="note">일주 궤적은 장노출 사진처럼 별이 지나온 길을 그립니다. 행성 이동 경로는 ‘매일 같은 시각’ 속도로 재생하면 별자리 사이에서 행성이 역행하는 모습을 볼 수 있습니다.</p>
+
+        <h3 style="margin-top:20px">세차 운동 <span class="level adv">심화</span></h3>
+        <label class="row" style="font-size:13.5px"><input type="checkbox" id="epochDate" checked> 관측 날짜의 춘분점 기준 (기본)</label>
+        <div class="field">
+          <label for="epoch">기준 연도 <output id="epochOut"></output></label>
+          <input type="range" id="epoch" min="-13000" max="15000" step="50" disabled>
+        </div>
+      </div>
+
+      <!-- 표시 -->
+      <div class="tab" id="tab-disp">
+        <div class="quick">
+          <button class="btn small" data-preset="min">최소</button>
+          <button class="btn small" data-preset="hor">지평좌표계</button>
+          <button class="btn small" data-preset="eq">적도좌표계</button>
+          <button class="btn small" data-preset="ecl">황도좌표계</button>
+          <button class="btn small" data-preset="gal">은하좌표계</button>
+          <button class="btn small" data-preset="all">모두</button>
+        </div>
+        <div id="dispGroups"></div>
+      </div>
+
+      <!-- 천체 정보 -->
+      <div class="tab" id="tab-obj">
+        <div class="field row">
+          <input id="objSearch" list="objList" placeholder="별·행성 이름 (예: 시리우스, Vega, 화성)">
+          <button class="btn small primary" id="btnFind">선택</button>
+        </div>
+        <datalist id="objList"></datalist>
+        <div class="quick" id="objQuick"></div>
+        <p class="note">3D 화면에서 별을 클릭해도 선택됩니다. 빈 하늘에 마우스를 올리면 그 지점의 좌표가 표시됩니다.</p>
+        <div id="objInfo" class="info"></div>
+        <h4>좌표 호 표시</h4>
+        <div class="check-group" id="arcChecks">
+          <label><input type="checkbox" data-arc="hor"><span class="swatch" style="background:#8dffb4"></span>고도 h·방위각 A</label>
+          <label><input type="checkbox" data-arc="eq"><span class="swatch" style="background:#ff4d6d"></span>적경 α·적위 δ</label>
+          <label><input type="checkbox" data-arc="ha"><span class="swatch" style="background:#ffa23f"></span>시간각 H</label>
+          <label><input type="checkbox" data-arc="circles"><span class="swatch" style="background:#ffa23f"></span>일주권</label>
+          <label><input type="checkbox" data-arc="ecl"><span class="swatch" style="background:#ffe066"></span>황경 λ·황위 β</label>
+          <label><input type="checkbox" data-arc="gal"><span class="swatch" style="background:#d08cff"></span>은경 l·은위 b</label>
+          <label><input type="checkbox" data-show="triangle"><span class="swatch" style="background:#40c4ff"></span>천문 삼각형 PZX</label>
+        </div>
+        <div id="triInfo"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="js/celestial.js"></script>
+</body>
+</html>

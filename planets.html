@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>행성의 운동 실험실 · Astronomy Lab</title>
+  <meta name="description" content="내행성과 외행성의 위치 관계, 겉보기 운동(순행·역행·유), 회합 주기, 위상 변화를 시뮬레이션합니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html">천구·좌표계</a>
+      <a href="planets.html" class="on">행성의 운동</a>
+      <a href="kepler.html">케플러 법칙</a>
+      <a href="training.html">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+
+  <main class="lab2">
+    <section class="stage">
+      <div class="canvas-main">
+        <canvas id="cMain"></canvas>
+        <div class="overlay-tl">
+          <div class="seg" id="frameSeg">
+            <button data-frame="helio" class="on">☉ 태양 중심(공전 궤도)</button>
+            <button data-frame="geo">⊕ 지구 중심(겉보기 경로)</button>
+          </div>
+          <div class="seg small" id="modeSeg">
+            <button data-mode="real" class="on">실제 궤도 (날짜)</button>
+            <button data-mode="concept">개념 모델 (원 궤도)</button>
+          </div>
+        </div>
+        <div class="stage-bottom" style="left:12px;right:12px">
+          <button class="btn play" id="btnPlay">▶</button>
+          <select id="speed">
+            <option value="1">1일 / 초</option>
+            <option value="5">5일 / 초</option>
+            <option value="15" selected>15일 / 초</option>
+            <option value="40">40일 / 초</option>
+            <option value="120">120일 / 초</option>
+          </select>
+          <button class="btn small" data-step="-10">−10일</button>
+          <button class="btn small" data-step="-1">−1일</button>
+          <button class="btn small" data-step="1">+1일</button>
+          <button class="btn small" data-step="10">+10일</button>
+          <input type="date" id="date" style="max-width:150px">
+          <div class="clock" id="clock"></div>
+        </div>
+      </div>
+      <div class="canvas-sub">
+        <canvas id="cSub"></canvas>
+        <div class="overlay-tl" style="top:8px;left:8px">
+          <div class="seg small" id="stripSeg">
+            <button data-strip="time" class="on">시간에 따른 황경 변화</button>
+            <button data-strip="sky">하늘에서의 경로 (황경–황위)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs" style="grid-template-columns:repeat(3,1fr)">
+        <button data-tab="sim" class="on">시뮬레이션</button>
+        <button data-tab="concept">개념 정리</button>
+        <button data-tab="calc">계산기</button>
+      </nav>
+
+      <div class="tab on" id="tab-sim">
+        <div class="quick" id="planetBtns"></div>
+        <div class="field hidden" id="customBox">
+          <label for="customA">가상 행성의 궤도 반지름 a <output id="customAOut"></output></label>
+          <input type="range" id="customA" min="0.2" max="20" step="0.01" value="1.52">
+          <label for="incl" style="margin-top:8px">궤도 경사 i (황위 변화) <output id="inclOut"></output></label>
+          <input type="range" id="incl" min="0" max="8" step="0.1" value="0">
+        </div>
+        <div class="check-group">
+          <label><input type="checkbox" id="optSight" checked> 시선 (지구→행성)</label>
+          <label><input type="checkbox" id="optSun" checked> 태양 방향</label>
+          <label><input type="checkbox" id="optElong" checked> 이각 표시</label>
+          <label><input type="checkbox" id="optRetro"> 역행 원리 그림</label>
+          <label><input type="checkbox" id="optTrail" checked> 지구 중심 궤적</label>
+          <label><input type="checkbox" id="optLabels" checked> 위치 관계 이름</label>
+        </div>
+        <div class="field">
+          <label for="zoom">확대 <output id="zoomOut">1.0×</output></label>
+          <input type="range" id="zoom" min="0.5" max="6" step="0.05" value="1">
+        </div>
+
+        <div class="box" id="stateBox"></div>
+        <div class="telescope box">
+          <canvas id="cScope" width="240" height="240"></canvas>
+          <div id="scopeInfo" class="readout"></div>
+        </div>
+        <h4>다가오는 현상 (클릭하면 이동)</h4>
+        <ul class="events" id="events"></ul>
+        <div class="box readout" id="periodBox"></div>
+      </div>
+
+      <div class="tab guide" id="tab-concept">
+        <h3>내행성과 외행성</h3>
+        <p><b>내행성</b>(수성·금성)은 지구 궤도 안쪽, <b>외행성</b>(화성~해왕성)은 바깥쪽에서 공전한다. 지구에서 볼 때 태양–지구–행성이 이루는 각을 <b>이각(離角)</b>이라 한다.</p>
+        <h4>내행성의 위치 관계</h4>
+        <ul>
+          <li><b>내합</b>: 태양–내행성–지구 순으로 일직선. 지구와 가장 가깝고 그믐달처럼 가늘게(관측 거의 불가) 보이며, 이 무렵 <b>역행</b>한다.</li>
+          <li><b>외합</b>: 내행성–태양–지구 순. 가장 멀고 보름달 모양이지만 태양에 가려 보이지 않는다.</li>
+          <li><b>최대 이각</b>: 지구에서 그은 시선이 궤도에 접할 때(∠태양–행성–지구 = 90°). 반달 모양. 수성 약 18°~28°, 금성 약 46°~47°.</li>
+          <li><b>동방 최대 이각</b>: 태양의 동쪽 → <b>초저녁 서쪽 하늘</b> / <b>서방 최대 이각</b>: 태양의 서쪽 → <b>새벽 동쪽 하늘</b></li>
+        </ul>
+        <div class="key">순서: 내합 → 서방 최대 이각 → 외합 → 동방 최대 이각 → 내합</div>
+        <h4>외행성의 위치 관계</h4>
+        <ul>
+          <li><b>충</b>: 태양–지구–외행성 순. 지구와 가장 가깝고 가장 밝으며 자정에 남중 → 밤새 보인다. 이 무렵 <b>역행</b>한다.</li>
+          <li><b>합</b>: 외행성–태양–지구 순. 태양과 함께 뜨고 져서 보이지 않는다.</li>
+          <li><b>동구</b>(이각 90°, 태양의 동쪽): 해 질 무렵 남중 / <b>서구</b>(태양의 서쪽): 해 뜰 무렵 남중</li>
+        </ul>
+        <div class="key">순서: 충 → 동구 → 합 → 서구 → 충</div>
+        <h4>겉보기 운동</h4>
+        <p>별자리를 배경으로 행성이 <b>서→동</b>으로 움직이면 <b>순행</b>, <b>동→서</b>로 움직이면 <b>역행</b>, 방향이 바뀌며 잠시 멈춘 듯 보이면 <b>유(留)</b>라 한다. 역행은 지구가 행성을 추월할 때(외행성) 또는 내행성이 지구를 추월할 때 상대적인 시선 방향 변화로 생긴다.</p>
+        <h4>회합 주기</h4>
+        <p>행성이 같은 위치 관계(예: 충 → 다음 충)로 돌아오는 데 걸리는 시간 S. 공전 주기 P, 지구의 공전 주기 E(=1년)일 때</p>
+        <div class="key formula">내행성: 1/S = 1/P − 1/E &nbsp;&nbsp; 외행성: 1/S = 1/E − 1/P</div>
+        <p>각속도의 차이(ω<sub>빠른</sub> − ω<sub>느린</sub>)로 한 바퀴(360°)를 따라잡는 시간이라고 생각하면 바로 유도된다.</p>
+        <details class="deep"><summary>🔭 심화: 역행의 각속도와 기간 (원 궤도)</summary>
+          충에서 지구와 행성의 공전 속도는 시선에 수직이므로, 상대 속도 v<sub>⊕</sub> − v<sub>P</sub> 를 거리 (a − 1)로 나눈 값이 겉보기 각속도이다.<br>
+          <span class="formula">ω<sub>역행</sub> = (v<sub>⊕</sub> − v<sub>P</sub>)/(a − 1) = (2π/E)·(1 − a<sup>−1/2</sup>)/(a − 1)</span> [rad/일, a는 AU]<br>
+          화성(a = 1.524)이면 약 0.36°/일, 목성(5.20)이면 약 0.13°/일.<br>
+          <b>유</b>의 조건: 지구(반지름 1, 각속도 ω₁)와 행성(반지름 a, 각속도 ω₂)의 일심 경도 차를 θ라 하면 시선 방향의 회전율이 0인 조건은
+          <span class="formula">a²ω₂ − a(ω₁ + ω₂) cos θ + ω₁ = 0</span>. 케플러 제3법칙(ω ∝ a<sup>−3/2</sup>)을 넣으면
+          <div class="key formula">cos θ<sub>유</sub> = √a / (a − √a + 1)</div>
+          역행 기간 ≈ 2θ<sub>유</sub>·S/360°. 화성: θ<sub>유</sub> ≈ 16.8°, S = 780일 → 약 73일. 금성: θ<sub>유</sub> ≈ 13.0°, S = 584일 → 약 42일.
+          (실제 궤도는 타원이라 해마다 조금씩 다르다. ‘다가오는 현상’ 목록에서 실제 유의 날짜를 확인해 보자.)</details>
+        <details class="deep"><summary>🔭 심화: 내행성의 궤도 반지름 구하기 (코페르니쿠스)</summary>
+          최대 이각 E<sub>max</sub>일 때 ∠태양–행성–지구 = 90° 이므로 <span class="formula">a = sin E<sub>max</sub></span> (AU). 금성의 최대 이각 46.3°이면 a ≈ 0.72 AU.<br>
+          외행성은 충에서 구까지 걸린 시간 t로 상대 각 θ = 360°·t/S 를 구하고 <span class="formula">a = 1/cos θ</span> 로 구한다.</details>
+        <details class="deep"><summary>🔭 심화: 금성의 위상과 밝기</summary>
+          금성은 내합 근처에서 가장 크게(약 60″) 보이지만 가늘다. 밝기 ∝ (조명된 면적)/(거리²) 이므로 최대 밝기는 내합과 최대 이각 사이, 이각 약 39°(내합 전후 약 36일)일 때 나타난다(등급 약 −4.6).<br>
+          갈릴레이가 관측한 금성의 <b>보름달 모양 위상</b>과 <b>크기 변화</b>는 금성이 태양 둘레를 돈다는 증거였다. 프톨레마이오스 체계에서는 금성이 항상 태양보다 가까워 초승달~반달 모양만 보여야 한다.</details>
+      </div>
+
+      <div class="tab" id="tab-calc">
+        <h3>회합 주기 계산기</h3>
+        <div class="field"><label>행성의 공전 주기 P (년)</label><input type="number" id="calcP" step="0.001" value="1.881" style="width:100%"></div>
+        <div class="box readout" id="calcOut"></div>
+        <h3 style="margin-top:20px">최대 이각 ↔ 궤도 반지름</h3>
+        <div class="field"><label>최대 이각 (°)</label><input type="number" id="calcE" step="0.1" value="46.3" style="width:100%"></div>
+        <div class="box readout" id="calcEOut"></div>
+        <h3 style="margin-top:20px">케플러 제3법칙</h3>
+        <div class="field"><label>궤도 긴반지름 a (AU)</label><input type="number" id="calcA" step="0.01" value="5.2" style="width:100%"></div>
+        <div class="box readout" id="calcAOut"></div>
+      </div>
+    </aside>
+  </main>
+  <script type="module" src="js/planets.js"></script>
+</body>
+</html>

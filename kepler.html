@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>케플러 법칙 실험실 · Astronomy Lab</title>
+  <meta name="description" content="타원 궤도, 면적 속도 일정, 조화 법칙, 케플러 방정식과 활력 방정식을 시각화합니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html">천구·좌표계</a>
+      <a href="planets.html">행성의 운동</a>
+      <a href="kepler.html" class="on">케플러 법칙</a>
+      <a href="training.html">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+  <main class="lab2">
+    <section class="stage">
+      <div class="canvas-main">
+        <canvas id="cMain"></canvas>
+        <div class="stage-bottom">
+          <button class="btn play" id="btnPlay">❚❚</button>
+          <select id="speed">
+            <option value="0.02">느리게 (50초/1공전)</option>
+            <option value="0.05" selected>보통 (20초/1공전)</option>
+            <option value="0.15">빠르게 (7초/1공전)</option>
+          </select>
+          <div class="clock" id="clock"></div>
+        </div>
+      </div>
+      <div class="canvas-sub">
+        <canvas id="cSub"></canvas>
+        <div class="overlay-tl" style="top:8px;left:8px">
+          <div class="seg small" id="subSeg">
+            <button data-sub="rv" class="on">거리 r · 속력 v 변화</button>
+            <button data-sub="law3">조화 법칙 (log a – log P)</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="panel">
+      <nav class="tabs" style="grid-template-columns:repeat(2,1fr)">
+        <button data-tab="sim" class="on">시뮬레이션</button>
+        <button data-tab="concept">개념 정리</button>
+      </nav>
+      <div class="tab on" id="tab-sim">
+        <div class="quick" id="presets"></div>
+        <div class="field"><label for="a">긴반지름 a <output id="aOut"></output></label><input type="range" id="a" min="0.2" max="40" step="0.01" value="1"></div>
+        <div class="field"><label for="e">이심률 e <output id="eOut"></output></label><input type="range" id="e" min="0" max="0.97" step="0.001" value="0.6"></div>
+        <div class="field"><label for="m">중심별 질량 M (태양 = 1) <output id="mOut"></output></label><input type="range" id="m" min="0.1" max="5" step="0.05" value="1"></div>
+        <div class="field"><label for="n">같은 시간 간격 수 N <output id="nOut"></output></label><input type="range" id="n" min="4" max="24" step="1" value="12"></div>
+        <div class="check-group">
+          <label><input type="checkbox" id="optSect" checked> 면적 속도 부채꼴</label>
+          <label><input type="checkbox" id="optVel" checked> 속도 벡터</label>
+          <label><input type="checkbox" id="optAnom"> 근점 이각 (E, M, ν)</label>
+          <label><input type="checkbox" id="optAxes" checked> 축·초점 표시</label>
+        </div>
+        <div class="box readout" id="readout"></div>
+        <div class="box readout" id="readout2"></div>
+      </div>
+      <div class="tab guide" id="tab-concept">
+        <h3>케플러의 행성 운동 법칙</h3>
+        <ol>
+          <li><b>타원 궤도 법칙</b>: 행성은 태양을 한 초점으로 하는 타원 궤도를 돈다.</li>
+          <li><b>면적 속도 일정 법칙</b>: 태양과 행성을 잇는 선분이 같은 시간 동안 쓸고 지나가는 넓이는 항상 같다. → 근일점에서 가장 빠르고 원일점에서 가장 느리다.</li>
+          <li><b>조화 법칙</b>: 공전 주기의 제곱은 궤도 긴반지름의 세제곱에 비례한다. P²(년) = a³(AU)</li>
+        </ol>
+        <table class="mini">
+          <tr><th>용어</th><th>식</th></tr>
+          <tr><td>짧은반지름 b</td><td>a√(1 − e²)</td></tr>
+          <tr><td>초점 거리 c</td><td>ae</td></tr>
+          <tr><td>근일점 거리 q</td><td>a(1 − e)</td></tr>
+          <tr><td>원일점 거리 Q</td><td>a(1 + e)</td></tr>
+        </table>
+        <div class="key">면적 속도 일정 ⇔ 각운동량 보존: r·v⊥ = 일정 → v<sub>근</sub>/v<sub>원</sub> = Q/q = (1 + e)/(1 − e)</div>
+        <details class="deep" open><summary>🔭 심화: 뉴턴의 일반화와 활력 방정식</summary>
+          <p>만유인력으로 유도하면 <span class="formula">P² = 4π²a³ / G(M + m)</span>. 태양계(년, AU, 태양 질량 단위)에서는 P² = a³/(M + m).</p>
+          <p>역학적 에너지 보존: <span class="formula">v²/2 − GM/r = −GM/2a</span> → <b>활력 방정식</b> <span class="formula">v² = GM(2/r − 1/a)</span></p>
+          <p>원 궤도 속력 v<sub>c</sub> = √(GM/r), 탈출 속력 v<sub>esc</sub> = √(2GM/r) = √2·v<sub>c</sub>. 지구의 평균 공전 속력 ≈ 29.78 km/s.</p>
+        </details>
+        <details class="deep"><summary>🔭 심화: 케플러 방정식</summary>
+          <p>근일점 통과 후 시간 t에서 위치를 구하는 방법:</p>
+          <ol>
+            <li>평균 근점 이각 <span class="formula">M = 2π(t − τ)/P</span> (균일하게 증가)</li>
+            <li>케플러 방정식 <span class="formula">M = E − e sin E</span> 를 풀어 이심 근점 이각 E (반복법: E<sub>n+1</sub> = M + e sin E<sub>n</sub>)</li>
+            <li>진근점 이각 <span class="formula">tan(ν/2) = √((1 + e)/(1 − e)) tan(E/2)</span>, 거리 <span class="formula">r = a(1 − e cos E) = a(1 − e²)/(1 + e cos ν)</span></li>
+          </ol>
+          <p>E는 타원의 중심에서 본 ‘보조원’ 위의 각이다. ‘근점 이각’ 표시를 켜고 확인해 보자. 면적 속도 일정 법칙에서 출발하면 (보조원에서의 넓이를 b/a 배로 줄이는 관계를 이용해) 케플러 방정식을 유도할 수 있다.</p>
+        </details>
+        <details class="deep"><summary>🔭 심화: 궤도의 6요소</summary>
+          긴반지름 a, 이심률 e, 궤도 경사 i, 승교점 경도 Ω, 근일점 인수 ω, 근일점 통과 시각 τ(또는 특정 시각의 평균 근점 이각). 앞의 둘은 모양, 다음 셋은 공간에서의 방향, 마지막은 위치를 정한다. ‘행성의 운동’ 실험실의 실제 궤도는 JPL이 제공하는 이 요소들로 계산한다.
+        </details>
+      </div>
+    </aside>
+  </main>
+  <script type="module" src="js/kepler.js"></script>
+</body>
+</html>

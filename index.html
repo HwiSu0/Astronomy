@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Astronomy Lab · 천문학 학습 프로그램</title>
+  <meta name="description" content="천구와 좌표계(지평·적도·황도·은하)를 3D로 탐구하고, 내행성·외행성의 운동과 케플러 법칙을 시뮬레이션하는 천문학 학습 프로그램.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: radial-gradient(1200px 600px at 80% -10%, #1a2350 0%, transparent 60%), radial-gradient(900px 500px at -10% 20%, #2a1840 0%, transparent 55%), var(--bg); }
+    #stars { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html">천구·좌표계</a>
+      <a href="planets.html">행성의 운동</a>
+      <a href="kepler.html">케플러 법칙</a>
+      <a href="training.html">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+  <main class="page">
+    <section class="hero">
+      <h1>하늘을 보면 <span class="grad">천구가 보이도록</span></h1>
+      <p>천구의 구성 요소와 지평·적도·황도·은하 좌표계를 3D로 직접 돌려 보고, 위도와 시각을 바꾸며 일주 운동을 관찰하고, 내행성·외행성의 운동을 실제 날짜로 시뮬레이션합니다. 하이탑 지구과학Ⅱ의 기본 개념부터 천문 올림피아드 수준의 계산까지 한곳에서 연습할 수 있습니다.</p>
+      <div class="row" style="margin-top:18px">
+        <a class="btn primary" href="celestial.html?step=1">학습 가이드로 시작하기 →</a>
+        <a class="btn" href="training.html?mode=find">적경·적위 훈련</a>
+      </div>
+    </section>
+
+    <div class="cards">
+      <a class="card" href="celestial.html">
+        <div class="ico">🌐</div><h3>천구와 좌표계 실험실</h3>
+        <p>고화질 3D 천구에서 지평·적도·황도·은하 좌표계를 겹쳐 보고, 별을 클릭해 고도·방위각·적경·적위·시간각을 호(arc)로 확인합니다. 위도·날짜·시각을 바꾸면 일주 운동 궤적이 그려집니다.</p>
+        <div class="tags"><span class="tag">15단계 학습 가이드</span><span class="tag">관측자 시점</span><span class="tag">일주 궤적</span><span class="tag">천문 삼각형</span><span class="tag">세차 운동</span></div>
+      </a>
+      <a class="card" href="planets.html">
+        <div class="ico">🪐</div><h3>행성의 운동 실험실</h3>
+        <p>내합·외합·최대 이각, 충·합·구를 실제 궤도(JPL 궤도 요소)로 계산합니다. 시선이 별자리 띠에 그리는 겉보기 위치로 순행·역행·유를 이해하고, 금성의 위상 변화를 확인합니다.</p>
+        <div class="tags"><span class="tag">역행 원리 그림</span><span class="tag">지구 중심 궤적</span><span class="tag">다가오는 현상 날짜</span><span class="tag">회합 주기</span></div>
+      </a>
+      <a class="card" href="kepler.html">
+        <div class="ico">⭕</div><h3>케플러 법칙 실험실</h3>
+        <p>이심률과 긴반지름을 바꾸며 면적 속도 일정 법칙을 확인하고, 평균·이심·진근점 이각과 활력 방정식으로 속력을 계산합니다.</p>
+        <div class="tags"><span class="tag">케플러 방정식</span><span class="tag">활력 방정식</span><span class="tag">조화 법칙 그래프</span></div>
+      </a>
+      <a class="card" href="training.html">
+        <div class="ico">🎯</div><h3>적경·적위 훈련</h3>
+        <p>무작위 밤하늘에서 주어진 적경·적위를 찾아 클릭하고, 표시된 별의 좌표를 읽어 냅니다. 값이 매번 바뀌는 계산 문제(기본·심화)와 개념 퀴즈도 있습니다.</p>
+        <div class="tags"><span class="tag">하늘에서 찾기</span><span class="tag">좌표 읽기</span><span class="tag">계산 문제 26종</span><span class="tag">개념 퀴즈</span></div>
+      </a>
+      <a class="card" href="notes.html">
+        <div class="ico">📘</div><h3>개념 노트</h3>
+        <p>천구 → 좌표계 → 일주·연주 운동 → 행성의 운동 → 실전 관측 순서로 정리한 노트. 구면 삼각법, 좌표 변환 행렬, 유의 조건, 케플러 방정식 등 심화 내용 포함.</p>
+        <div class="tags"><span class="tag">기본 + 심화</span><span class="tag">예제와 풀이</span><span class="tag">밝은 별 목록</span></div>
+      </a>
+    </div>
+
+    <h2 class="section-title">추천 학습 순서</h2>
+    <div class="path">
+      <div><b>천구의 구성 요소</b>가이드 1~3단계: 천정, 지평선, 천구의 극, 자오선. 위도를 바꾸며 h<sub>P</sub> = φ 확인</div>
+      <div><b>좌표계 익히기</b>가이드 4~6, 11~12단계: 지평·적도·황도·은하 좌표계와 시간각·항성시</div>
+      <div><b>일주·연주 운동</b>가이드 7~10단계: 방향별·위도별 일주 운동, 태양의 연주 운동, 항성일</div>
+      <div><b>행성의 운동</b>행성 실험실: 금성(내행성)과 화성(외행성)의 위치 관계, 역행, 회합 주기</div>
+      <div><b>심화</b>천문 삼각형, 세차 운동, 케플러 방정식, 개념 노트의 보라색 상자</div>
+      <div><b>실전 훈련</b>좌표 찾기·읽기 훈련으로 실제 하늘에서 적경·적위를 쓰는 감각 익히기</div>
+    </div>
+
+    <h2 class="section-title">사용 팁</h2>
+    <div class="cards">
+      <div class="card" style="cursor:default"><h3>🖱️ 조작</h3><p>천구 모형: 끌어서 회전, 휠로 확대 · 관측자 시점: 끌어서 둘러보기, 휠로 시야 조절 · <kbd>Space</kbd> 재생/정지, <kbd>←</kbd><kbd>→</kbd> 10분 이동(<kbd>Shift</kbd> 1시간)</p></div>
+      <div class="card" style="cursor:default"><h3>🧭 좌표 읽기</h3><p>빈 하늘 위에 마우스를 올리면 그 지점의 고도·방위각·적경·적위·시간각(그리고 켜 둔 황도·은하 좌표)이 왼쪽 아래에 표시됩니다.</p></div>
+      <div class="card" style="cursor:default"><h3>📱 기기</h3><p>PC와 태블릿 브라우저(크롬, 엣지, 사파리)에서 동작합니다. 3D 화면은 WebGL을 사용하므로 그래픽 가속이 켜져 있어야 합니다.</p></div>
+    </div>
+    <footer class="foot">Astronomy Lab — 교육용 천문 시뮬레이션. 별 위치: J2000.0 밝은 별 목록 · 행성 위치: JPL 근사 궤도 요소 · 3D: three.js</footer>
+  </main>
+  <script>
+    // 배경 별 (장식)
+    (function () {
+      const cv = document.getElementById('stars'), ctx = cv.getContext('2d');
+      function draw() {
+        const d = Math.min(devicePixelRatio || 1, 2);
+        cv.width = innerWidth * d; cv.height = innerHeight * d; ctx.scale(d, d);
+        let s = 7;
+        const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+        for (let i = 0; i < 260; i++) {
+          const x = rnd() * innerWidth, y = rnd() * innerHeight, r = Math.pow(rnd(), 3) * 1.6 + 0.2;
+          ctx.fillStyle = `rgba(220,230,255,${0.25 + rnd() * 0.6})`;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
+        }
+      }
+      draw(); addEventListener('resize', draw);
+    })();
+  </script>
+</body>
+</html>
