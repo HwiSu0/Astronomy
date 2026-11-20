@@ -250,6 +250,207 @@ export function geocentric(key, jd) {
 }
 
 // ---------------------------------------------------------------------
+//  달의 위치 — Meeus, Astronomical Algorithms 47장 (ELP-2000/82 축약판)
+//  주요 항만 남긴 계열: 황경·황위 오차 약 0.01°, 거리 오차 수 km
+// ---------------------------------------------------------------------
+// [D, M, M′, F, Σl(10⁻⁶°), Σr(10⁻³ km)]
+const MOON_LR = [
+  [0, 0, 1, 0, 6288774, -20905355], [2, 0, -1, 0, 1274027, -3699111], [2, 0, 0, 0, 658314, -2955968],
+  [0, 0, 2, 0, 213618, -569925], [0, 1, 0, 0, -185116, 48888], [0, 0, 0, 2, -114332, -3149],
+  [2, 0, -2, 0, 58793, 246158], [2, -1, -1, 0, 57066, -152138], [2, 0, 1, 0, 53322, -170733],
+  [2, -1, 0, 0, 45758, -204586], [0, 1, -1, 0, -40923, -129620], [1, 0, 0, 0, -34720, 108743],
+  [0, 1, 1, 0, -30383, 104755], [2, 0, 0, -2, 15327, 10321], [0, 0, 1, 2, -12528, 0],
+  [0, 0, 1, -2, 10980, 79661], [4, 0, -1, 0, 10675, -34782], [0, 0, 3, 0, 10034, -23210],
+  [4, 0, -2, 0, 8548, -21636], [2, 1, -1, 0, -7888, 24208], [2, 1, 0, 0, -6766, 30824],
+  [1, 0, -1, 0, -5163, -8379], [1, 1, 0, 0, 4987, -16675], [2, -1, 1, 0, 4036, -12831],
+  [2, 0, 2, 0, 3994, -10445], [4, 0, 0, 0, 3861, -11650], [2, 0, -3, 0, 3665, 14403],
+  [0, 1, -2, 0, -2689, -7003], [2, 0, -1, 2, -2602, 0], [2, -1, -2, 0, 2390, 10056],
+  [1, 0, 1, 0, -2348, 6322], [2, -2, 0, 0, 2236, -9884], [0, 1, 2, 0, -2120, 5751],
+  [0, 2, 0, 0, -2069, 0], [2, 0, -1, -2, 0, 8752],
+];
+// [D, M, M′, F, Σb(10⁻⁶°)]
+const MOON_B = [
+  [0, 0, 0, 1, 5128122], [0, 0, 1, 1, 280602], [0, 0, 1, -1, 277693], [2, 0, 0, -1, 173237],
+  [2, 0, -1, 1, 55413], [2, 0, -1, -1, 46271], [2, 0, 0, 1, 32573], [0, 0, 2, 1, 17198],
+  [2, 0, 1, -1, 9266], [0, 0, 2, -1, 8822], [2, -1, 0, -1, 8216], [2, 0, -2, -1, 4324],
+  [2, 0, 1, 1, 4200], [2, 1, 0, -1, -3359], [2, -1, -1, 1, 2463], [2, -1, 0, 1, 2211],
+  [2, -1, -1, -1, 2065], [0, 1, -1, -1, -1870], [4, 0, -1, -1, 1828], [0, 1, 0, 1, -1794],
+  [0, 0, 0, 3, -1749], [0, 1, -1, 1, -1565], [1, 0, 0, 1, -1491], [0, 1, 1, 1, -1475],
+  [0, 1, 1, -1, -1410], [0, 1, 0, -1, -1344], [1, 0, 0, -1, -1335], [0, 0, 3, 1, 1107],
+  [4, 0, 0, -1, 1021], [4, 0, -1, 1, 833],
+];
+export const SYNODIC_MONTH = 29.530589, SIDEREAL_MONTH = 27.321662, DRACONIC_MONTH = 27.212221, ANOMALISTIC_MONTH = 27.554550;
+export const R_EARTH = 6378.14, R_MOON = 1737.4, AU_KM = 149597870.7;
+
+/** 달의 지심 위치 (그날의 평균 춘분점 기준 황경·황위, 적경·적위, 거리 km, 지평 시차, 시반경) */
+export function moonPosition(jd) {
+  const T = (jd - J2000) / 36525, T2 = T * T, T3 = T2 * T, T4 = T3 * T;
+  const Lp = norm360(218.3164477 + 481267.88123421 * T - 0.0015786 * T2 + T3 / 538841 - T4 / 65194000);
+  const D = norm360(297.8501921 + 445267.1114034 * T - 0.0018819 * T2 + T3 / 545868 - T4 / 113065000);
+  const M = norm360(357.5291092 + 35999.0502909 * T - 0.0001536 * T2 + T3 / 24490000);
+  const Mp = norm360(134.9633964 + 477198.8675055 * T + 0.0087414 * T2 + T3 / 69699 - T4 / 14712000);
+  const F = norm360(93.2720950 + 483202.0175233 * T - 0.0036539 * T2 - T3 / 3526000 + T4 / 863310000);
+  const A1 = 119.75 + 131.849 * T, A2 = 53.09 + 479264.290 * T, A3 = 313.45 + 481266.484 * T;
+  const E = 1 - 0.002516 * T - 0.0000074 * T2;
+  let sl = 0, sr = 0, sb = 0;
+  for (const [d, m, mp, f, l, r] of MOON_LR) {
+    const arg = d * D + m * M + mp * Mp + f * F, e = m === 0 ? 1 : Math.abs(m) === 1 ? E : E * E;
+    sl += l * e * sind(arg); sr += r * e * cosd(arg);
+  }
+  for (const [d, m, mp, f, b] of MOON_B) {
+    const arg = d * D + m * M + mp * Mp + f * F, e = m === 0 ? 1 : Math.abs(m) === 1 ? E : E * E;
+    sb += b * e * sind(arg);
+  }
+  sl += 3958 * sind(A1) + 1962 * sind(Lp - F) + 318 * sind(A2);
+  sb += -2235 * sind(Lp) + 382 * sind(A3) + 175 * sind(A1 - F) + 175 * sind(A1 + F) + 127 * sind(Lp - Mp) - 115 * sind(Lp + Mp);
+  const lon = norm360(Lp + sl / 1e6), lat = sb / 1e6, dist = 385000.56 + sr / 1000;
+  const eps = OBLIQUITY - 0.0130042 * T;
+  const eq = eclToEq(lon, lat, eps);
+  const node = norm360(125.0445479 - 1934.1362891 * T + 0.0020754 * T2); // 평균 승교점 황경
+  return { lon, lat, dist, ra: eq.ra, dec: eq.dec, eps, node, par: asind(R_EARTH / dist), sd: asind(R_MOON / dist), Mp, F };
+}
+
+/** 달의 위상: elong = λ☾ − λ☉ (0 삭, 90 상현, 180 망, 270 하현), 위상각, 밝은 면 비율 */
+export function moonPhase(jd) {
+  const m = moonPosition(jd), s = sunPosition(jd);
+  const elong = norm360(m.lon - s.lon);
+  const psi = acosd(cosd(m.lat) * cosd(m.lon - s.lon)); // 지구에서 본 태양–달 각거리
+  const R = s.dist * AU_KM;
+  const i = atan2d(R * sind(psi), m.dist - R * cosd(psi)); // 위상각 (태양–달–지구)
+  return { moon: m, sun: s, elong, psi, phaseAngle: i, illum: (1 + cosd(i)) / 2 };
+}
+/** jdStart 이후 처음으로 elong = target(°)이 되는 시각 */
+export function findMoonPhase(jdStart, target) {
+  let t = jdStart + norm360(target - moonPhase(jdStart).elong) / 12.19;
+  for (let k = 0; k < 12; k++) {
+    const diff = norm180(target - moonPhase(t).elong);
+    t += diff / 12.19;
+    if (Math.abs(diff) < 1e-7) break;
+  }
+  return t < jdStart - 1e-6 ? findMoonPhase(jdStart + 1, target) : t;
+}
+export function moonPhaseName(elong) {
+  const e = norm360(elong);
+  if (e < 7 || e > 353) return '삭 (신월)';
+  if (e < 83) return '초승달';
+  if (e <= 97) return '상현달';
+  if (e < 173) return '상현망 사이 (차오르는 볼록달)';
+  if (e <= 187) return '보름달 (망)';
+  if (e < 263) return '하현망 사이 (기우는 볼록달)';
+  if (e <= 277) return '하현달';
+  return '그믐달';
+}
+/** 지심 적경·적위 → 관측자 기준(토포센트릭) 적경·적위. 구형 지구 근사 */
+export function topocentric(ra, dec, distKm, lat, lst) {
+  const v = radecToVec(ra, dec).map((x) => x * distKm);
+  const t = [v[0] - R_EARTH * cosd(lat) * cosd(lst), v[1] - R_EARTH * cosd(lat) * sind(lst), v[2] - R_EARTH * sind(lat)];
+  const r = vecToRadec(t);
+  return { ra: r.ra, dec: r.dec, dist: Math.hypot(t[0], t[1], t[2]) };
+}
+/** 관측자에게 보이는 달의 지평 좌표 */
+export function moonHorizontal(jd, lat, lon) {
+  const m = moonPosition(jd), lst = lstDeg(jd, lon);
+  const tp = topocentric(m.ra, m.dec, m.dist, lat, lst);
+  return { ...eqToHor(norm360(lst - tp.ra), tp.dec, lat), ra: tp.ra, dec: tp.dec, ha: norm180(lst - tp.ra), moon: m };
+}
+/** 하루(지방시 0~24시) 동안의 월출·남중·월몰 시각 (시 단위, 없으면 null) */
+export function moonRiseSet(jd0, lat, lon) {
+  const n = 144, f = [], H = [];
+  for (let k = 0; k <= n; k++) {
+    const h = moonHorizontal(jd0 + k / n, lat, lon);
+    f.push(h.alt + 0.5667 + h.moon.sd); // 위쪽 가장자리 + 대기차
+    H.push(h.ha);
+  }
+  const refine = (fn, a, b) => { let fa = fn(a); for (let i = 0; i < 30; i++) { const m = (a + b) / 2, fm = fn(m); if ((fm < 0) === (fa < 0)) { a = m; fa = fm; } else b = m; } return (a + b) / 2; };
+  const out = { rise: null, set: null, transit: null, transitAlt: null };
+  for (let k = 0; k < n; k++) {
+    const a = jd0 + k / n, b = jd0 + (k + 1) / n;
+    if (f[k] < 0 && f[k + 1] >= 0 && out.rise === null) out.rise = (refine((t) => { const h = moonHorizontal(t, lat, lon); return h.alt + 0.5667 + h.moon.sd; }, a, b) - jd0) * 24;
+    if (f[k] >= 0 && f[k + 1] < 0 && out.set === null) out.set = (refine((t) => { const h = moonHorizontal(t, lat, lon); return h.alt + 0.5667 + h.moon.sd; }, a, b) - jd0) * 24;
+    if (H[k] < 0 && H[k + 1] >= 0 && H[k + 1] - H[k] < 90 && out.transit === null) {
+      const tt = refine((t) => moonHorizontal(t, lat, lon).ha, a, b);
+      out.transit = (tt - jd0) * 24; out.transitAlt = moonHorizontal(tt, lat, lon).alt;
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------
+//  일식·월식 (지심 기하 + 그림자 반지름. 월식은 Chauvenet 1.02 확대)
+// ---------------------------------------------------------------------
+function goldenMin(f, a, b) {
+  const g = 0.381966;
+  let c = a + g * (b - a), d = b - g * (b - a), fc = f(c), fd = f(d);
+  for (let i = 0; i < 50; i++) {
+    if (fc < fd) { b = d; d = c; fd = fc; c = a + g * (b - a); fc = f(c); }
+    else { a = c; c = d; fc = fd; d = b - g * (b - a); fd = f(d); }
+  }
+  return (a + b) / 2;
+}
+const sunSD = (s) => 0.266563 / s.dist, sunPar = (s) => 8.794 / 3600 / s.dist;
+
+export function lunarEclipseAt(tFull, lat = 37.5665, lon = 126.978) {
+  const sep = (t) => { const m = moonPosition(t), s = sunPosition(t); return acosd(-cosd(m.lat) * cosd(m.lon - s.lon)); };
+  const t = goldenMin(sep, tFull - 0.3, tFull + 0.3);
+  const m = moonPosition(t), s = sunPosition(t), sigma = sep(t);
+  const ru = 1.02 * (m.par + sunPar(s) - sunSD(s)), rp = 1.02 * (m.par + sunPar(s) + sunSD(s)), sm = m.sd;
+  const umag = (ru + sm - sigma) / (2 * sm), pmag = (rp + sm - sigma) / (2 * sm);
+  let type = null;
+  if (umag >= 1) type = '개기월식'; else if (umag > 0) type = '부분월식'; else if (pmag > 0) type = '반영월식';
+  if (!type) return null;
+  // 관측 가능성: 최대 식 ± 반영식 진행 시간 중 달이 떠 있는가
+  const half = Math.sqrt(Math.max(0, (rp + sm) ** 2 - sigma ** 2)) / 0.5490 / 24; // 달의 상대 운동 약 0.549°/시
+  const alts = [-1, -0.5, 0, 0.5, 1].map((k) => moonHorizontal(t + k * half, lat, lon).alt);
+  const vis = alts[2] > 0 ? '보임' : alts.some((a) => a > 0) ? '일부 보임' : '안 보임';
+  return { kind: 'lunar', type, t, mag: umag > 0 ? umag : pmag, umag, pmag, gamma: sigma / ru, altMax: alts[2], vis, sigma };
+}
+
+export function solarEclipseAt(tNew, lat = 37.5665, lon = 126.978) {
+  const sep = (t) => { const m = moonPosition(t), s = sunPosition(t); return acosd(cosd(m.lat) * cosd(m.lon - s.lon)); };
+  const t = goldenMin(sep, tNew - 0.3, tNew + 0.3);
+  const m = moonPosition(t), s = sunPosition(t), sigma = sep(t);
+  const ss = sunSD(s), dPar = m.par - sunPar(s);
+  if (sigma >= dPar + m.sd + ss) return null;
+  const gamma = sigma / dPar; // 그림자 축이 지구 중심에서 떨어진 거리 (지구 반지름 단위, 근사)
+  let type = '부분일식';
+  if (gamma < 0.997) {
+    const ratio = (m.sd / ss) * (1 + (R_EARTH / m.dist) * Math.sqrt(1 - gamma * gamma));
+    type = ratio > 1.0005 ? '개기일식' : ratio > 0.997 ? '혼성일식' : '금환일식';
+  }
+  // 서울에서의 모습: 토포센트릭 이각이 최소가 되는 순간
+  let best = null;
+  for (let k = -110; k <= 110; k++) {
+    const tt = t + k / 480; // 3분 간격, ±약 4.6시간
+    const mm = moonPosition(tt), sn = sunPosition(tt), lst = lstDeg(tt, lon);
+    const sunAlt = eqToHor(norm360(lst - sn.ra), sn.dec, lat).alt;
+    if (sunAlt < -0.8) continue;
+    const tp = topocentric(mm.ra, mm.dec, mm.dist, lat, lst);
+    const d = angularDistance(tp.ra, tp.dec, sn.ra, sn.dec), smT = asind(R_MOON / tp.dist), ssT = sunSD(sn);
+    if (d < smT + ssT && (!best || d < best.d)) best = { t: tt, d, mag: (smT + ssT - d) / (2 * ssT), sunAlt };
+  }
+  return { kind: 'solar', type, t, gamma, sigma, ratio: m.sd / ss, local: best, vis: best ? '보임' : '안 보임' };
+}
+
+/** jdStart부터 years년 동안의 일식·월식 목록 */
+export function findEclipses(jdStart, years, lat, lon) {
+  const out = [], end = jdStart + years * 365.25;
+  let t = jdStart;
+  while (t < end) {
+    const tn = findMoonPhase(t, 0), tf = findMoonPhase(t, 180);
+    const isNew = tn < tf, ts = isNew ? tn : tf;
+    if (ts > end) break;
+    // 태양이 교점 근처(약 ±20°)에 있을 때만 자세히 계산
+    const m = moonPosition(ts);
+    if (Math.abs(m.lat) < 1.75) {
+      const ev = isNew ? solarEclipseAt(ts, lat, lon) : lunarEclipseAt(ts, lat, lon);
+      if (ev) out.push(ev);
+    }
+    t = ts + 2;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------
 //  출몰·남중
 // ---------------------------------------------------------------------
 /** 남중 고도(위), 하culmination 고도(아래) */

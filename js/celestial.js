@@ -31,7 +31,7 @@ const sky = new SkyScene($('#sky'), { lat: LOCATIONS[0].lat, lon: LOCATIONS[0].l
 window.sky = sky; // 콘솔에서 실험해 볼 수 있도록
 
 // ------------------------------------------------------------------ 표시 항목
-const ESSENTIAL = { shell: true, horizon: true, cardinals: true, zenith: true, stars: true, starNames: true, constellations: true, observer: true, ground: true, sun: true, planets: true };
+const ESSENTIAL = { shell: true, horizon: true, cardinals: true, zenith: true, stars: true, starNames: true, constellations: true, observer: true, ground: true, sun: true, planets: true, moon: true };
 const BASE_OFF = Object.fromEntries(Object.keys(DEFAULT_SHOW).map((k) => [k, false]));
 const PRESETS = {
   min: {},
@@ -46,7 +46,7 @@ const GROUPS = [
   { title: '적도좌표계', color: 'var(--eq)', items: [['equator', '천구의 적도'], ['poles', '천구의 극·자전축'], ['eqGrid', '적경·적위 격자'], ['rotationArrows', '일주 운동 방향']] },
   { title: '황도좌표계', color: 'var(--ecl)', items: [['ecliptic', '황도'], ['eclPoints', '춘·추분점, 하·동지점'], ['eclGrid', '황경·황위 격자']] },
   { title: '은하좌표계', color: 'var(--gal)', items: [['galactic', '은하 적도·중심·극'], ['galGrid', '은경·은위 격자'], ['milkyway', '은하수']] },
-  { title: '천체', color: '#cfd8ff', items: [['stars', '별'], ['starNames', '밝은 별 이름'], ['allStarNames', '모든 별 이름'], ['constellations', '별자리 선'], ['conNames', '별자리 이름'], ['sun', '태양'], ['sunPath', '오늘 태양의 일주권'], ['seasonPaths', '계절별 태양 일주권'], ['planets', '행성']] },
+  { title: '천체', color: '#cfd8ff', items: [['stars', '별'], ['starNames', '밝은 별 이름'], ['allStarNames', '모든 별 이름'], ['constellations', '별자리 선'], ['conNames', '별자리 이름'], ['sun', '태양'], ['sunPath', '오늘 태양의 일주권'], ['seasonPaths', '계절별 태양 일주권'], ['moon', '달 (위상 표시)'], ['planets', '행성']] },
   { title: '기타', color: 'var(--accent)', items: [['shell', '천구 구면'], ['observer', '관측자'], ['ground', '땅 가리기(관측자 시점)'], ['atmosphere', '낮 하늘 표현(관측자 시점)'], ['precessionCircle', '세차 원'], ['triangle', '천문 삼각형 PZX'], ['trails', '별의 일주 궤적'], ['planetTrails', '행성 이동 경로']] },
 ];
 
@@ -164,9 +164,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ------------------------------------------------------------------ 천체 선택
-$('#objList').innerHTML = ['태양', ...A.PLANET_KEYS.map((k) => A.PLANETS[k].ko), ...STARS.map((s) => s.ko), ...STARS.map((s) => s.en)]
+$('#objList').innerHTML = ['태양', '달', ...A.PLANET_KEYS.map((k) => A.PLANETS[k].ko), ...STARS.map((s) => s.ko), ...STARS.map((s) => s.en)]
   .map((n) => `<option value="${n}">`).join('');
-$('#objQuick').innerHTML = ['폴라리스(북극성)', '시리우스', '베가(직녀성)', '베텔게우스', '안타레스', '데네브', '태양', '화성', '목성']
+$('#objQuick').innerHTML = ['폴라리스(북극성)', '시리우스', '베가(직녀성)', '베텔게우스', '안타레스', '데네브', '태양', '달', '화성', '목성']
   .map((n) => `<button class="btn small" data-sel="${n}">${n}</button>`).join('');
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-sel]');
@@ -240,6 +240,16 @@ function renderInfo() {
     const p = info.planet;
     extra = `<div class="box readout"><span class="k">지구로부터 거리</span> ${p.dist.toFixed(3)} AU · <span class="k">태양으로부터</span> ${p.r.toFixed(3)} AU<br>` +
       `<span class="k">이각</span> ${p.elong.toFixed(1)}° (${p.side === 'E' ? '동쪽 — 초저녁 서쪽 하늘' : '서쪽 — 새벽 동쪽 하늘'}) · <span class="k">위상</span> ${(p.illum * 100).toFixed(0)}% · <span class="k">각지름</span> ${p.diam.toFixed(1)}″</div>`;
+  }
+  if (info.desc.kind === 'moon' && info.moon) {
+    const md = info.moon, rs = info.moonRS || {};
+    const ev = [['월출', rs.rise], ['남중', rs.transit], ['월몰', rs.set]].filter((x) => x[1] != null).sort((a, b) => a[1] - b[1]);
+    rise = `<b>오늘의 월출·월몰</b> (달은 하루에 약 13° 동쪽으로 움직이므로 별처럼 계산하지 않고 직접 추적)<br>` +
+      (ev.length ? ev.map(([n, t]) => `${n} <b>${hoursTxt(t)}</b>`).join(' · ') : '이날은 뜨거나 지지 않음') +
+      `<br><span class="note">위 좌표는 관측자 기준(시차 보정) 값. 지심 좌표: α ${A.fmtRA(md.moon.ra, false)}, δ ${A.fmtDMS(md.moon.dec, true, false)}</span>`;
+    extra = `<div class="box readout"><span class="k">위상</span> <b>${A.moonPhaseName(md.elong)}</b> · 밝은 부분 ${(md.illum * 100).toFixed(0)}% · 이각 ${md.elong.toFixed(0)}° (태양의 동쪽 기준)<br>` +
+      `<span class="k">월령</span> 약 ${(md.elong / 360 * A.SYNODIC_MONTH).toFixed(1)}일 · <span class="k">거리</span> ${Math.round(md.moon.dist).toLocaleString()} km · <span class="k">시직경</span> ${(2 * md.moon.sd * 60).toFixed(1)}′<br>` +
+      `<span class="note">화면의 달 크기는 실제(0.5°)보다 약 8배 크게 그렸다. <a href="moon.html?jd=${sky.jd.toFixed(5)}">달의 운동 실험실에서 자세히 보기 →</a></span></div>`;
   }
   if (info.desc.kind === 'sun') {
     extra = `<div class="box readout"><span class="k">태양의 황경</span> ${sky.sunData.lon.toFixed(2)}° · <span class="k">지구–태양 거리</span> ${sky.sunData.dist.toFixed(4)} AU<br>` +
@@ -515,7 +525,23 @@ const STEPS = [
   },
 ];
 
+STEPS.push({
+  title: '달의 운동과 위상', level: 'basic',
+  show: { equator: true, poles: true, ecliptic: true, eclPoints: true, planetTrails: true }, select: ['@moon'], arcs: { eq: true }, speed: 'daily:1', play: true, cam: 'default',
+  html: `
+    <p>달은 지구 둘레를 서→동으로 공전하므로, <b>매일 같은 시각</b>에 보면 별자리 사이를 하루에 약 <b>13°씩 동쪽</b>으로 이동한다(흰 선: 달이 지나온 길). 달이 지나는 길(<b>백도</b>)은 황도와 약 5.1° 기울어져 있어 달은 늘 황도 근처에 있다.</p>
+    <ul>
+      <li>태양도 하루 약 1° 동쪽으로 움직이므로 달은 태양보다 하루 약 12.2°씩 뒤처진다 → <b>매일 약 50분 늦게</b> 뜬다.</li>
+      <li>태양과의 이각이 커지면서 위상이 <b>삭 → 초승달 → 상현달 → 보름달 → 하현달 → 그믐달</b> 순으로 변한다(삭망월 29.53일).</li>
+      <li>화면의 달은 실제 위상을 그렸고, 밝은 쪽이 항상 태양을 향한다. (크기는 약 8배 과장)</li>
+    </ul>
+    <div class="key">항성월 27.32일(별 기준) &lt; 삭망월 29.53일(태양 기준): 1/S = 1/P☾ − 1/E</div>
+    <div class="quick"><button class="btn small" data-act="lookmoon">🔭 관측자 시점으로 달 보기</button><button class="btn small" data-speed="continuous:3600">하루 동안의 움직임 (1시간/초)</button></div>
+    <p class="try">👉 같은 시각에 매일 달을 보면 서쪽 하늘의 초승달이 남쪽의 상현달, 동쪽의 보름달로 바뀐다. <a href="moon.html">달의 운동 실험실</a>에서 위상, 월출 시각, 일식·월식을 더 자세히 다룬다.</p>`,
+});
+
 function visibleStarFrom(names) {
+  if (names[0] === '@moon') return { kind: 'moon' };
   sky.update();
   if (names[0] === '@planet') {
     const order = ['jupiter', 'saturn', 'mars', 'venus', 'mercury'];
@@ -566,6 +592,13 @@ function applyStep(i, rebuildHtml = true) {
       $$('[data-epoch]', $('#gBody')).forEach((b) => b.addEventListener('click', () => setE(+b.dataset.epoch)));
     }
     $$('[data-speed]', $('#gBody')).forEach((b) => b.addEventListener('click', () => { applySpeed(b.dataset.speed); sky.setPlaying(true); }));
+    $$('[data-act="lookmoon"]', $('#gBody')).forEach((b) => b.addEventListener('click', () => {
+      const h = A.moonHorizontal(sky.jd, sky.lat, sky.lon);
+      sky.setPlaying(false);
+      sky.setView('observer');
+      sky.lookAt(h.az, Math.max(12, h.alt), 70);
+      if (h.alt < 0) b.textContent = '🔭 달이 지금 지평선 아래에 있다 (시간을 바꿔 보자)';
+    }));
     history.replaceState(null, '', `?step=${stepIdx + 1}`);
   }
   $('#epochDate').checked = sky.epochMode === 'date';
@@ -581,5 +614,6 @@ $('#gSteps').addEventListener('click', (e) => { const b = e.target.closest('[dat
 const startStep = parseInt(params.get('step') || '1', 10) - 1;
 applyStep(Number.isFinite(startStep) ? startStep : 0);
 if (params.get('lat')) setLat(parseFloat(params.get('lat')));
+if (params.get('jd') && Number.isFinite(+params.get('jd'))) { sky.setPlaying(false); sky.setJD(+params.get('jd')); }
 if (params.get('star')) sky.selectByName(params.get('star'));
 syncUI();

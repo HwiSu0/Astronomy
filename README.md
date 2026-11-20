@@ -11,8 +11,9 @@
 |---|---|
 | `celestial.html` **천구·좌표계 실험실** | 3D 천구(외부 모형 / 관측자 시점), 지평·적도·황도·은하 좌표 격자, 별 클릭 시 h·A·α·δ·H·λ·β·l·b를 호로 표시, 위도·경도·날짜·시각 설정, 일주 궤적, 태양의 연주 운동, 계절별 태양 일주권, 천문 삼각형 PZX, 세차 운동, 15단계 학습 가이드 |
 | `planets.html` **행성의 운동 실험실** | 실제 궤도(JPL 근사 궤도 요소) 또는 원 궤도 개념 모델, 내합·외합·최대 이각·충·합·구·유의 날짜 계산, 역행 원리 그림, 지구 중심 궤적, 시간–황경 그래프, 하늘에서의 경로(황경–황위), 망원경으로 본 위상, 회합 주기 계산기 |
+| `moon.html` **달의 운동 실험실** | 실제 날짜의 위상·월령, 서울의 월출·남중·월몰(시차·대기차 반영), 위상과 관측 시각 그림, 항성월·삭망월, 백도·교점과 식 계절, 앞으로의 일식·월식 목록(서울 관측 가능 여부·식분), 3D 천구 연동 |
 | `kepler.html` **케플러 법칙 실험실** | 면적 속도 일정(같은 시간 간격 부채꼴), 속도 벡터, 평균·이심·진근점 이각, 거리·속력 그래프, 조화 법칙 log–log 그래프 |
-| `training.html` **적경·적위 훈련** | 하늘에서 좌표 찾기(클릭), 별의 좌표 읽기(입력), 무작위 계산 문제(기본 13종·심화 13종, 단계별 풀이), 개념 퀴즈 |
+| `training.html` **적경·적위 훈련** | 하늘에서 좌표 찾기(클릭), 별의 좌표 읽기(입력), 무작위 계산 문제(기본 16종·심화 17종, 단계별 풀이), 개념 퀴즈 43문항 |
 | `notes.html` **개념 노트** | 기본/심화 구분 정리, 예제와 풀이, 밝은 별 목록(J2000.0), 주요 상수 |
 
 ## 실행 방법
@@ -39,19 +40,21 @@ Windows에서는 `start-server.bat`을 더블클릭해도 됩니다.
 - 좌표 변환: 구면 삼각법(천문 삼각형) / 회전 행렬, 은하 좌표는 Hipparcos 정의 회전 행렬
 - 태양: 천문연감 저정밀식(약 0.01°), 균시차 포함
 - 행성: E. M. Standish, *Keplerian Elements for Approximate Positions of the Major Planets* (1800–2050년)
+- 달: J. Meeus, *Astronomical Algorithms* 47장(ELP-2000/82 축약, 약 0.01°), 관측자 시차 보정. 일식·월식은 지심 기하 + 지구 그림자 1.02배 확대로 판정 (2026–2036년 실제 식 목록과 날짜·종류 일치 확인)
 - 세차: 황도 고정·황도 경사 일정 근사(수천 년 규모 시각화용)
 - 별: 밝은 별 약 180개의 J2000.0 좌표, 주요 별자리 선
 
 ## 파일 구조
 
 ```
-index.html  celestial.html  planets.html  kepler.html  training.html  notes.html
+index.html  celestial.html  planets.html  moon.html  kepler.html  training.html  notes.html
 css/style.css
-js/astro.js      천문 계산 엔진 (시간, 좌표 변환, 태양·행성 위치, 케플러 방정식)
+js/astro.js      천문 계산 엔진 (시간, 좌표 변환, 태양·달·행성 위치, 일식·월식, 케플러 방정식)
 js/stars.js      밝은 별 목록, 별자리 선
 js/skyscene.js   3D 천구 엔진 (three.js)
 js/celestial.js  천구 실험실 UI와 학습 가이드
 js/planets.js    행성의 운동 실험실
+js/moon.js       달의 운동 실험실
 js/kepler.js     케플러 법칙 실험실
 js/problems.js   계산 문제 생성기, 개념 퀴즈
 js/training.js   훈련 페이지

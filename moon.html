@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>달의 운동 실험실 · Astronomy Lab</title>
+  <meta name="description" content="달의 위상 변화와 뜨고 지는 시각, 항성월과 삭망월, 백도와 교점, 일식과 월식을 실제 날짜로 시뮬레이션합니다.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .phase-card { display: flex; gap: 14px; align-items: center; }
+    .phase-card canvas { width: 116px !important; height: 116px !important; flex: none; }
+    .ecl-list { list-style: none; padding: 0; margin: 6px 0; font-size: 13.5px; }
+    .ecl-list li { padding: 8px 6px; border-bottom: 1px dashed var(--line); cursor: pointer; }
+    .ecl-list li:hover { background: var(--panel2); }
+    .ecl-list .ty { font-weight: 700; }
+    .ecl-list .solar .ty { color: #ffd76e; } .ecl-list .lunar .ty { color: #ff9a8a; }
+    .ecl-list .vis { float: right; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--bg2); border: 1px solid var(--line); }
+    .ecl-list .vis.on { color: var(--good); border-color: #2f7a4b; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <nav class="nav">
+      <a href="celestial.html">천구·좌표계</a>
+      <a href="planets.html">행성의 운동</a>
+      <a href="moon.html" class="on">달의 운동</a>
+      <a href="kepler.html">케플러 법칙</a>
+      <a href="training.html">적경·적위 훈련</a>
+      <a href="notes.html">개념 노트</a>
+    </nav>
+  </header>
+
+  <main class="lab2">
+    <section class="stage">
+      <div class="canvas-main">
+        <canvas id="cMain"></canvas>
+        <div class="overlay-tl">
+          <div class="seg" id="viewSeg">
+            <button data-view="phase" class="on">🌓 위상과 뜨는 시각</button>
+            <button data-view="month">🔄 항성월·삭망월</button>
+            <button data-view="eclipse">🌑 백도와 일식·월식</button>
+          </div>
+        </div>
+        <div class="stage-bottom">
+          <button class="btn play" id="btnPlay">▶</button>
+          <select id="speed">
+            <option value="0.0416667">1시간 / 초</option>
+            <option value="0.25" selected>6시간 / 초</option>
+            <option value="1">1일 / 초</option>
+            <option value="4">4일 / 초</option>
+            <option value="20">20일 / 초</option>
+          </select>
+          <button class="btn small" data-step="-1">−1일</button>
+          <button class="btn small" data-step="-0.0416667">−1h</button>
+          <button class="btn small" data-step="0.0416667">+1h</button>
+          <button class="btn small" data-step="1">+1일</button>
+          <input type="date" id="date" style="max-width:150px">
+          <input type="range" id="time" min="0" max="1439" step="5" style="width:130px" title="시각 (KST)">
+          <div class="clock" id="clock"></div>
+        </div>
+      </div>
+      <div class="canvas-sub" style="height:170px"><canvas id="cSub"></canvas></div>
+    </section>
+
+    <aside class="panel">
+      <nav class="tabs" style="grid-template-columns:repeat(3,1fr)">
+        <button data-tab="sim" class="on">달 정보</button>
+        <button data-tab="ecl">일식·월식</button>
+        <button data-tab="concept">개념 정리</button>
+      </nav>
+
+      <div class="tab on" id="tab-sim">
+        <div class="phase-card box">
+          <canvas id="cPhase" width="232" height="232"></canvas>
+          <div class="readout" id="phaseInfo"></div>
+        </div>
+        <div class="box readout" id="moonInfo"></div>
+        <div class="box readout" id="riseInfo"></div>
+        <h4>다가오는 위상 (클릭하면 이동)</h4>
+        <ul class="events" id="phaseList"></ul>
+        <div class="quick"><a class="btn small" id="lnk3d" href="celestial.html?step=16">🌐 3D 하늘에서 이 시각의 달 보기</a></div>
+      </div>
+
+      <div class="tab" id="tab-ecl">
+        <h3>일식·월식 목록</h3>
+        <p class="note" style="font-size:13.5px!important">현재 날짜부터 계산한 결과입니다. 항목을 누르면 그 순간으로 이동합니다. ‘서울’ 표시는 서울에서 관측 가능한지(일식은 최대 식분)입니다.</p>
+        <div class="row" style="margin:6px 0">
+          <label class="row" style="font-size:13.5px"><input type="checkbox" id="onlyKorea"> 서울에서 보이는 것만</label>
+          <select id="eclYears"><option value="3">3년</option><option value="10" selected>10년</option><option value="20">20년</option></select>
+        </div>
+        <ul class="ecl-list" id="eclList"><li>계산 중…</li></ul>
+        <p class="note">계산: 달 위치 Meeus 47장(ELP-2000/82 축약), 지구 그림자 반지름 1.02배 확대(Chauvenet). 일식 종류는 지심 기하로 판정한 근사이며, 개기·금환의 경계에 있는 혼성일식은 다르게 나올 수 있습니다.</p>
+      </div>
+
+      <div class="tab guide" id="tab-concept">
+        <h3>달의 위상</h3>
+        <p>달은 스스로 빛을 내지 못하고 햇빛을 반사한다. 달의 절반은 항상 태양 쪽이 밝지만, 지구에서 보는 방향이 공전에 따라 달라지므로 밝은 부분의 모양(<b>위상</b>)이 변한다.</p>
+        <table class="mini">
+          <tr><th>위상</th><th>이각(동)</th><th>뜸</th><th>남중</th><th>짐</th><th>보이는 때</th></tr>
+          <tr><td>삭</td><td>0°</td><td>6시</td><td>12시</td><td>18시</td><td>안 보임</td></tr>
+          <tr><td>초승달</td><td>약 45°</td><td>9시</td><td>15시</td><td>21시</td><td>초저녁 서쪽</td></tr>
+          <tr><td>상현달</td><td>90°</td><td>12시</td><td>18시</td><td>24시</td><td>저녁 남쪽 (오른쪽 반)</td></tr>
+          <tr><td>보름달</td><td>180°</td><td>18시</td><td>24시</td><td>6시</td><td>밤새</td></tr>
+          <tr><td>하현달</td><td>270°</td><td>24시</td><td>6시</td><td>12시</td><td>새벽 남쪽 (왼쪽 반)</td></tr>
+          <tr><td>그믐달</td><td>약 315°</td><td>3시</td><td>9시</td><td>15시</td><td>새벽 동쪽</td></tr>
+        </table>
+        <p class="note">시각은 대략적인 지방 태양시. 달은 별을 기준으로 하루에 약 13.2° 동쪽으로 움직이고 태양은 약 1° 움직이므로, 달은 태양보다 하루에 약 12.2°씩 뒤처져 <b>매일 약 50분씩 늦게</b> 뜬다.</p>
+        <h4>항성월과 삭망월</h4>
+        <div class="key formula">1/S = 1/P☾ − 1/E &nbsp;→&nbsp; 항성월 27.32일, 삭망월 29.53일</div>
+        <p><b>항성월</b>은 별을 기준으로 한 바퀴, <b>삭망월</b>은 같은 위상(삭 → 삭)으로 돌아오는 주기이다. 그 사이 지구가 공전하여 태양 방향이 약 27° 바뀌므로 달이 그만큼 더 돌아야 한다.</p>
+        <h4>백도와 교점, 식의 조건</h4>
+        <p>달의 궤도면(<b>백도</b>)은 황도면과 약 <b>5.1°</b> 기울어져 있다. 두 면이 만나는 직선의 양 끝이 <b>교점</b>(승교점 ☊, 강교점 ☋)이다. 삭이나 망이 될 때 달이 교점 근처에 있어야 태양–지구–달이 거의 일직선이 되어 식이 일어난다. 그래서 일식·월식은 매달 일어나지 않고, 태양이 교점 근처를 지나는 <b>식 계절</b>(약 173일 간격)에 몰려 일어난다.</p>
+        <ul>
+          <li><b>일식</b>: 삭일 때, 달 그림자가 지구에 떨어짐 — 개기·금환·부분. 달이 지구에 가까우면(시직경이 크면) 개기, 멀면 금환</li>
+          <li><b>월식</b>: 망일 때, 달이 지구 그림자 속으로 — 개기·부분·반영. 밤인 지역 어디서나 같은 모습으로 보인다</li>
+        </ul>
+        <details class="deep"><summary>🔭 심화: 여러 가지 ‘달(month)’과 사로스</summary>
+          <table class="mini">
+            <tr><th>주기</th><th>기준</th><th>길이(일)</th></tr>
+            <tr><td>항성월</td><td>별</td><td>27.32166</td></tr>
+            <tr><td>분점월</td><td>춘분점</td><td>27.32158</td></tr>
+            <tr><td>교점월</td><td>승교점 → 승교점</td><td>27.21222</td></tr>
+            <tr><td>근점월</td><td>근지점 → 근지점</td><td>27.55455</td></tr>
+            <tr><td>삭망월</td><td>태양 (위상)</td><td>29.53059</td></tr>
+          </table>
+          교점은 황도를 따라 <b>서쪽으로</b> 18.6년에 한 바퀴 역행하므로, 태양이 같은 교점으로 돌아오는 <b>식년</b>은 1년보다 짧다: 1/식년 = 1/365.25 + 1/6793.5 → <b>346.62일</b>.<br>
+          <b>사로스 주기</b>: 223 삭망월 = 6585.32일 ≈ 242 교점월(6585.36일) ≈ 239 근점월(6585.54일) ≈ 18년 11일 8시간. 같은 조건이 되풀이되어 비슷한 식이 다시 일어난다(8시간 때문에 지구에서 보이는 지역은 경도 약 120° 서쪽으로 이동).</details>
+        <details class="deep"><summary>🔭 심화: 식의 한계와 시차</summary>
+          지구 중심에서 본 태양과 달 중심 사이의 각거리를 σ라 하면<br>
+          · 일식이 지구 어딘가에서 보일 조건: <span class="formula">σ &lt; π☾ − π☉ + s☾ + s☉</span> (약 1.4°~1.6°)<br>
+          · 월식(본영식) 조건: 달과 지구 본그림자 중심의 각거리 <span class="formula">σ′ &lt; 1.02(π☾ + π☉ − s☉) + s☾</span><br>
+          (π: 지평 시차, s: 시반경) 이를 황위로 바꾸면 삭에서 |β| ≲ 1.5°, 망에서 |β| ≲ 1.0°. 태양이 교점에서 약 ±15~18° 안에 있을 때 일식, ±9~12° 안에 있을 때 월식이 가능하다(<b>식의 한계</b>).<br>
+          <b>달의 지평 시차</b> π☾ = arcsin(R⊕/d) ≈ 57′ 이므로, 관측자 위치에 따라 달의 겉보기 위치가 최대 약 1° 달라진다(이 실험실의 월출 시각과 서울 일식 계산은 이를 반영한다).</details>
+        <details class="deep"><summary>🔭 심화: 계절에 따른 보름달의 높이</summary>
+          보름달은 태양의 반대편에 있으므로 겨울(태양의 적위 −23°)에는 적위가 약 +23°가 되어 높이 뜨고(서울 남중 고도 약 75°), 여름에는 낮게 뜬다(약 29°). 실제로는 백도의 경사 ±5.1° 때문에 18.6년 주기로 ±5° 더 변한다.</details>
+      </div>
+    </aside>
+  </main>
+  <script type="module" src="js/moon.js"></script>
+</body>
+</html>

@@ -36,7 +36,7 @@ export const DEFAULT_SHOW = {
   ecliptic: false, eclPoints: false, eclGrid: false,
   galactic: false, galGrid: false, milkyway: false,
   stars: true, starNames: true, allStarNames: false, constellations: true, conNames: false,
-  sun: true, sunPath: false, seasonPaths: false, planets: true,
+  sun: true, sunPath: false, seasonPaths: false, planets: true, moon: true,
   observer: true, ground: true, atmosphere: false,
   trails: false, planetTrails: false, precessionCircle: false, triangle: false,
 };
@@ -525,6 +525,30 @@ export class SkyScene {
       this._label(t, 'lbl-season', ['seasonPaths'], this.haGroup, eqLocal(-12, d + 2.5));
     });
 
+    // 달 (위상을 그린 스프라이트, 크기는 약 8배 과장)
+    this.moonCanvas = document.createElement('canvas');
+    this.moonCanvas.width = this.moonCanvas.height = 128;
+    this.moonTex = new THREE.CanvasTexture(this.moonCanvas);
+    const mm = new THREE.SpriteMaterial({ map: this.moonTex, transparent: true, depthWrite: false, opacity: 1 });
+    this._surf(mm, 1);
+    this.moonSprite = new THREE.Sprite(mm);
+    this.moonSprite.scale.set(0.8, 0.8, 1);
+    this.moonSprite.renderOrder = 3;
+    this._add(this.eqGroup, this.moonSprite, LY.SURF, ['moon']);
+    this.moonLabel = this._label('달', 'lbl-moon', ['moon'], this.eqGroup, new THREE.Vector3());
+    this._moonPhaseDrawn = null;
+    {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8000 * 3), 3));
+      geo.setDrawRange(0, 0);
+      const m = new THREE.LineBasicMaterial({ color: 0xe8e4d4, transparent: true, opacity: 0.8, depthWrite: false });
+      this._surf(m, 0.8);
+      const line = new THREE.Line(geo, m);
+      line.frustumCulled = false;
+      this._add(this.eqGroup, line, LY.SURF, ['moon', 'planetTrails']);
+      this.moonTrail = { line, n: 0, last: null };
+    }
+
     // 행성
     const keys = A.PLANET_KEYS;
     const pos = new Float32Array(keys.length * 3), col = new Float32Array(keys.length * 3), size = new Float32Array(keys.length);
@@ -644,7 +668,10 @@ export class SkyScene {
   setPlaying(p) { this.playing = p; this._acc = 0; this.emit('play', p); }
   setSpeed(mode, rate) { this.stepMode = mode; this.rate = rate; this._acc = 0; }
   resetTrails() { this.trailStart = A.lstContinuous(this.jd, this.lon); this._dirty = true; }
-  resetPlanetTrails() { for (const k in this.planetTrails) { this.planetTrails[k].n = 0; this.planetTrails[k].last = null; this.planetTrails[k].line.geometry.setDrawRange(0, 0); } this._dirty = true; }
+  resetPlanetTrails() {
+    for (const t of [...Object.values(this.planetTrails), this.moonTrail]) { t.n = 0; t.last = null; t.line.geometry.setDrawRange(0, 0); }
+    this._dirty = true;
+  }
 
   setView(v) {
     if (this.view === 'outside' && v === 'observer') this._outsidePos.copy(this.camera.position);
@@ -698,6 +725,7 @@ export class SkyScene {
     q = (q || '').trim().toLowerCase();
     if (!q) return false;
     if (q === '태양' || q === 'sun') { this.select({ kind: 'sun' }); return true; }
+    if (q === '달' || q === 'moon') { this.select({ kind: 'moon' }); return true; }
     for (const k of A.PLANET_KEYS) if (A.PLANETS[k].ko === q || A.PLANETS[k].en.toLowerCase() === q) { this.select({ kind: 'planet', key: k }); return true; }
     const s = STARS.find((s) => s.ko.toLowerCase() === q || s.en.toLowerCase() === q || s.bayer.toLowerCase() === q)
       || STARS.find((s) => s.ko.toLowerCase().includes(q) || s.en.toLowerCase().includes(q));
@@ -707,6 +735,7 @@ export class SkyScene {
   objectName(desc = this.selected) {
     if (!desc) return '';
     if (desc.kind === 'sun') return '태양';
+    if (desc.kind === 'moon') return '달';
     if (desc.kind === 'planet') return A.PLANETS[desc.key].ko;
     const s = STARS[desc.id];
     return `${s.ko} (${s.bayer})`;
@@ -716,6 +745,7 @@ export class SkyScene {
   objectEq(desc = this.selected) {
     if (!desc) return null;
     if (desc.kind === 'sun') { const s = this.sunData || A.sunPosition(this.jd); return { ra: s.ra, dec: s.dec }; }
+    if (desc.kind === 'moon') { if (!this.moonData) this._updateMoon(); return { ra: this.moonData.topo.ra, dec: this.moonData.topo.dec }; }
     if (desc.kind === 'planet') {
       const g = this.planetGeo[desc.key] || A.geocentric(desc.key, this.jd);
       return A.precess(g.ra, g.dec, this.epoch);
@@ -751,6 +781,11 @@ export class SkyScene {
     if (rs.type === 'normal') { out.rise = transit - (rs.H0 / 15) * A.SIDEREAL_RATIO; out.set = transit + (rs.H0 / 15) * A.SIDEREAL_RATIO; }
     if (desc.kind === 'star') out.mag = STARS[desc.id].mag;
     if (desc.kind === 'planet') out.planet = this.planetGeo[desc.key];
+    if (desc.kind === 'moon') {
+      out.moon = this.moonData;
+      const rs = A.moonRiseSet(jd0, this.lat, this.lon);
+      out.moonRS = rs;
+    }
     return out;
   }
 
@@ -808,6 +843,7 @@ export class SkyScene {
     this.scene.updateMatrixWorld(true);
 
     this._updateSun();
+    this._updateMoon();
     this._updatePlanets();
     this._updateTrails();
     this._updateSelection();
@@ -821,6 +857,64 @@ export class SkyScene {
     this.sunLabel.obj.position.copy(eqLocal(s.ra, s.dec, R * 1.0));
     this._setLine(this.sunPathLine, curve((a) => eqLocal(a, s.dec, R * 1.001), 0, 360, 180));
     this.sunHor = A.eqToHor(A.norm360(this.lst - s.ra), s.dec, this.lat);
+  }
+
+  _updateMoon() {
+    const ph = A.moonPhase(this.jd), m = ph.moon;
+    const lst = this.lst ?? A.lstDeg(this.jd, this.lon);
+    const topo = A.topocentric(m.ra, m.dec, m.dist, this.lat, lst); // 관측자 위치의 시차(최대 약 1°) 반영
+    this.moonData = { ...ph, topo, age: null };
+    const p = eqLocal(topo.ra, topo.dec, R * 0.985);
+    this.moonSprite.position.copy(p);
+    this.moonLabel.obj.position.copy(eqLocal(topo.ra, topo.dec, R));
+    if (this._moonPhaseDrawn === null || Math.abs(this._moonPhaseDrawn - ph.phaseAngle) > 0.7) {
+      this._moonPhaseDrawn = ph.phaseAngle;
+      this._drawMoonTexture(ph.phaseAngle);
+    }
+    if (this.show.planetTrails && this.show.moon) {
+      const t = this.moonTrail;
+      if (!t.last || A.angularDistance(t.last.ra, t.last.dec, topo.ra, topo.dec) > 0.15) {
+        if (t.n >= 8000) { t.line.geometry.attributes.position.array.copyWithin(0, 3 * 2000); t.n -= 2000; }
+        t.line.geometry.attributes.position.setXYZ(t.n++, p.x, p.y, p.z);
+        t.line.geometry.attributes.position.needsUpdate = true;
+        t.line.geometry.setDrawRange(0, t.n);
+        t.last = { ra: topo.ra, dec: topo.dec };
+      }
+    }
+  }
+  /** 위상각 i(0 = 보름)에 맞춰 달 텍스처를 그린다. 밝은 쪽이 텍스처의 +x */
+  _drawMoonTexture(i) {
+    const ctx = this.moonCanvas.getContext('2d'), c = 64, r = 58;
+    ctx.clearRect(0, 0, 128, 128);
+    ctx.fillStyle = 'rgba(52,56,70,0.92)';
+    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.fill();
+    const k = Math.cos(i * A.DEG);
+    const g = ctx.createRadialGradient(c - 18, c - 18, 6, c, c, r);
+    g.addColorStop(0, '#fffbee'); g.addColorStop(1, '#d9d2bc');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(c, c - r);
+    ctx.arc(c, c, r, -Math.PI / 2, Math.PI / 2, false);
+    ctx.ellipse(c, c, Math.max(0.01, Math.abs(r * k)), r, 0, Math.PI / 2, (3 * Math.PI) / 2, k < 0);
+    ctx.fill();
+    // 바다(어두운 무늬) 약간
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = 'rgba(120,115,100,0.22)';
+    [[c - 14, c - 16, 15], [c + 12, c - 6, 12], [c - 4, c + 14, 10], [c + 20, c + 18, 8]].forEach(([x, y, rr]) => { ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fill(); });
+    ctx.globalCompositeOperation = 'source-over';
+    this.moonTex.needsUpdate = true;
+  }
+  /** 화면에서 달의 밝은 쪽이 태양을 향하도록 스프라이트를 돌린다 */
+  _orientMoon() {
+    if (!this.moonSprite.visible) return;
+    const mp = this.moonSprite.getWorldPosition(new THREE.Vector3());
+    const m = mp.clone().normalize(), s = this.sunSprite.getWorldPosition(new THREE.Vector3()).normalize();
+    const t = s.clone().sub(m.clone().multiplyScalar(s.dot(m)));
+    if (t.lengthSq() < 1e-12) return;
+    t.normalize();
+    const p2 = m.clone().addScaledVector(t, 0.02).multiplyScalar(mp.length());
+    const a = mp.clone().project(this.camera), b = p2.project(this.camera);
+    this.moonSprite.material.rotation = Math.atan2((b.y - a.y) * this.h, (b.x - a.x) * this.w);
   }
 
   _updatePlanets() {
@@ -1087,6 +1181,7 @@ export class SkyScene {
     if (this.show.stars) STARS.forEach((s, i) => test(this.jGroup.localToWorld(this.starLocal[i].clone()), { kind: 'star', id: i }));
     if (this.show.planets) A.PLANET_KEYS.forEach((k) => { const g = this.planetGeo[k]; if (g) test(this.jGroup.localToWorld(eqLocal(g.ra, g.dec)), { kind: 'planet', key: k }); });
     if (this.show.sun && this.sunData) test(this.eqGroup.localToWorld(eqLocal(this.sunData.ra, this.sunData.dec)), { kind: 'sun' });
+    if (this.show.moon && this.moonData) test(this.eqGroup.localToWorld(eqLocal(this.moonData.topo.ra, this.moonData.topo.dec)), { kind: 'moon' });
     const coords = this.coordsAtClient(e.clientX, e.clientY);
     this.emit('click', { object: best, coords });
     if (this.pickable && best) this.select(best);
@@ -1116,6 +1211,7 @@ export class SkyScene {
 
   _render() {
     const r = this.renderer, cam = this.camera;
+    this._orientMoon();
     if (this.view === 'outside') {
       r.autoClear = false;
       r.clear();
