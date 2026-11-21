@@ -31,15 +31,21 @@ function resize() { M1 = setupCanvas($('#cMain')); M2 = setupCanvas($('#cSub'));
 new ResizeObserver(resize).observe($('.stage'));
 resize();
 
-function label(ctx, text, x, y, color = '#dfe6ff', align = 'left', size = 12.5, weight = 600) {
-  ctx.font = `${weight} ${size}px Pretendard Variable, Pretendard, sans-serif`;
+// 밝은 종이 바탕용 그림 색
+const INK = '#1f2129', MUTED = '#6b6e7a', FAINT = 'rgba(31,33,41,0.12)', PAPER = '#fbfaf8';
+const C = { sun: '#e9a514', sunInk: '#9a6200', planet: '#2a6fd0', planetInk: '#1f5bb0', peri: '#c2570a', aph: '#2a62c9', vel: '#1d8a50', velInk: '#17703f', E: '#0b7fb0', M: '#3f8a1f', nu: '#d4650c', nuInk: '#b5540a', now: '#d23a50' };
+
+function label(ctx, text, x, y, color = INK, align = 'left', size = 12.5, weight = 600) {
+  ctx.font = `${Math.min(weight, 700)} ${size}px 'IBM Plex Sans KR', sans-serif`;
   ctx.textAlign = align; ctx.textBaseline = 'middle';
-  ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(4,6,13,0.9)'; ctx.strokeText(text, x, y);
+  ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(251,250,248,0.92)'; ctx.strokeText(text, x, y);
   ctx.fillStyle = color; ctx.fillText(text, x, y);
 }
-function dot(ctx, x, y, r, color, glow = 0) {
-  if (glow) { const g = ctx.createRadialGradient(x, y, 0, x, y, r * glow); g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * glow, 0, TAU); ctx.fill(); }
+function dot(ctx, x, y, r, color, halo = 0) {
+  // halo: 큰 천체를 구별하기 위한 옅은 테두리 (빛 번짐 효과는 쓰지 않음)
+  if (halo) { ctx.save(); ctx.globalAlpha = 0.16; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r + 2 + halo, 0, TAU); ctx.fill(); ctx.restore(); }
   ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  if (halo) { ctx.strokeStyle = PAPER; ctx.lineWidth = 1.2; ctx.stroke(); }
 }
 function arrow(ctx, x0, y0, x1, y1, color, w = 2.2) {
   const a = Math.atan2(y1 - y0, x1 - x0), L = Math.hypot(x1 - x0, y1 - y0), hs = Math.min(10, L * 0.35);
@@ -67,9 +73,7 @@ const period = () => Math.sqrt(Math.pow(st.a, 3) / st.M);
 function drawMain() {
   const { ctx, w, h } = M1;
   ctx.clearRect(0, 0, w, h);
-  const bg = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  bg.addColorStop(0, '#0b1022'); bg.addColorStop(1, '#03050b');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, w, h);
 
   const { a, e, N } = st;
   const b = a * Math.sqrt(1 - e * e), c = a * e;
@@ -88,74 +92,74 @@ function drawMain() {
       for (let j = 0; j <= 24; j++) { const q = orbitState((k + j / 24) / N); ctx.lineTo(X(q.x), Y(q.y)); }
       ctx.closePath();
       const curK = Math.floor(st.phase * N) % N;
-      ctx.fillStyle = k === curK ? 'rgba(255,204,77,0.30)' : k % 2 ? 'rgba(110,168,255,0.10)' : 'rgba(208,140,255,0.10)';
+      ctx.fillStyle = k === curK ? 'rgba(233,165,20,0.32)' : k % 2 ? 'rgba(42,98,201,0.08)' : 'rgba(122,69,196,0.08)';
       ctx.fill();
-      ctx.strokeStyle = 'rgba(160,180,255,0.25)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.strokeStyle = 'rgba(31,33,41,0.18)'; ctx.lineWidth = 1; ctx.stroke();
     }
   }
   // 궤도
-  ctx.strokeStyle = 'rgba(200,215,255,0.85)'; ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(31,33,41,0.85)'; ctx.lineWidth = 1.8;
   ctx.beginPath(); ctx.ellipse(X(-c), Y(0), a * s, b * s, 0, 0, TAU); ctx.stroke();
 
   if (o.axes) {
-    ctx.strokeStyle = 'rgba(150,170,230,0.4)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(31,33,41,0.35)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(X(-c - a), Y(0)); ctx.lineTo(X(-c + a), Y(0)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(X(-c), Y(-b)); ctx.lineTo(X(-c), Y(b)); ctx.stroke();
     ctx.setLineDash([]);
-    dot(ctx, X(-c), Y(0), 2.5, '#8a96c4'); label(ctx, '중심', X(-c), Y(0) + 13, '#8a96c4', 'center', 11);
-    dot(ctx, X(-2 * c), Y(0), 3.5, '#8a96c4'); label(ctx, '빈 초점 F′', X(-2 * c), Y(0) - 13, '#8a96c4', 'center', 11);
-    label(ctx, `근일점 (q = ${(a * (1 - e)).toFixed(3)} AU)`, X(a - c) + 6, Y(0) + 16, '#ffbd73', 'right', 11.5);
-    label(ctx, `원일점 (Q = ${(a * (1 + e)).toFixed(3)} AU)`, X(-a - c) - 6, Y(0) + 16, '#9fcaff', 'left', 11.5);
-    dot(ctx, X(a - c), Y(0), 3, '#ffbd73'); dot(ctx, X(-a - c), Y(0), 3, '#9fcaff');
-    label(ctx, 'a', X(-c + a / 2), Y(0) - 10, '#cfd8ff', 'center', 12, 700);
-    label(ctx, 'b', X(-c) + 9, Y(b / 2), '#cfd8ff', 'left', 12, 700);
+    dot(ctx, X(-c), Y(0), 2.5, MUTED); label(ctx, '중심', X(-c), Y(0) + 13, MUTED, 'center', 11);
+    dot(ctx, X(-2 * c), Y(0), 3.5, MUTED); label(ctx, '빈 초점 F′', X(-2 * c), Y(0) - 13, MUTED, 'center', 11);
+    label(ctx, `근일점 (q = ${(a * (1 - e)).toFixed(3)} AU)`, X(a - c) + 6, Y(0) + 16, C.peri, 'right', 11.5);
+    label(ctx, `원일점 (Q = ${(a * (1 + e)).toFixed(3)} AU)`, X(-a - c) - 6, Y(0) + 16, C.aph, 'left', 11.5);
+    dot(ctx, X(a - c), Y(0), 3, C.peri); dot(ctx, X(-a - c), Y(0), 3, C.aph);
+    label(ctx, 'a', X(-c + a / 2), Y(0) - 10, INK, 'center', 12, 700);
+    label(ctx, 'b', X(-c) + 9, Y(b / 2), INK, 'left', 12, 700);
   }
 
   // 근점 이각
   if (o.anom) {
-    const C = [X(-c), Y(0)];
-    ctx.strokeStyle = 'rgba(150,170,230,0.45)'; ctx.setLineDash([3, 5]);
-    ctx.beginPath(); ctx.arc(C[0], C[1], a * s, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
-    const Qp = [C[0] + a * s * Math.cos(cur.E), C[1] - a * s * Math.sin(cur.E)];
-    const Mp = [C[0] + a * s * Math.cos(cur.M), C[1] - a * s * Math.sin(cur.M)];
-    ctx.strokeStyle = '#7fdbff'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(...C); ctx.lineTo(...Qp); ctx.stroke();
+    const Cn = [X(-c), Y(0)];
+    ctx.strokeStyle = 'rgba(31,33,41,0.35)'; ctx.setLineDash([3, 5]);
+    ctx.beginPath(); ctx.arc(Cn[0], Cn[1], a * s, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    const Qp = [Cn[0] + a * s * Math.cos(cur.E), Cn[1] - a * s * Math.sin(cur.E)];
+    const Mp = [Cn[0] + a * s * Math.cos(cur.M), Cn[1] - a * s * Math.sin(cur.M)];
+    ctx.strokeStyle = C.E; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(...Cn); ctx.lineTo(...Qp); ctx.stroke();
     ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(...Qp); ctx.lineTo(X(cur.x), Y(cur.y)); ctx.stroke(); ctx.setLineDash([]);
-    dot(ctx, Qp[0], Qp[1], 3.5, '#7fdbff');
-    ctx.strokeStyle = '#7fdbff'; ctx.beginPath(); ctx.arc(C[0], C[1], 26, 0, -cur.E, cur.E > 0); ctx.stroke();
-    label(ctx, `E = ${(A.norm360(cur.E * A.RAD)).toFixed(1)}°`, C[0] + 30 * Math.cos(-cur.E / 2), C[1] + 36 * Math.sin(-cur.E / 2), '#7fdbff', 'center', 11.5);
-    ctx.strokeStyle = '#b8ff9f'; ctx.setLineDash([5, 3]);
-    ctx.beginPath(); ctx.moveTo(...C); ctx.lineTo(...Mp); ctx.stroke(); ctx.setLineDash([]);
-    dot(ctx, Mp[0], Mp[1], 4, '#b8ff9f');
-    label(ctx, `M = ${(A.norm360(cur.M * A.RAD)).toFixed(1)}° (평균 운동)`, Mp[0], Mp[1] - 13, '#b8ff9f', 'center', 11.5);
+    dot(ctx, Qp[0], Qp[1], 3.5, C.E);
+    ctx.strokeStyle = C.E; ctx.beginPath(); ctx.arc(Cn[0], Cn[1], 26, 0, -cur.E, cur.E > 0); ctx.stroke();
+    label(ctx, `E = ${(A.norm360(cur.E * A.RAD)).toFixed(1)}°`, Cn[0] + 30 * Math.cos(-cur.E / 2), Cn[1] + 36 * Math.sin(-cur.E / 2), C.E, 'center', 11.5);
+    ctx.strokeStyle = C.M; ctx.setLineDash([5, 3]);
+    ctx.beginPath(); ctx.moveTo(...Cn); ctx.lineTo(...Mp); ctx.stroke(); ctx.setLineDash([]);
+    dot(ctx, Mp[0], Mp[1], 4, C.M);
+    label(ctx, `M = ${(A.norm360(cur.M * A.RAD)).toFixed(1)}° (평균 운동)`, Mp[0], Mp[1] - 13, C.M, 'center', 11.5);
     const nuA = cur.nu;
-    ctx.strokeStyle = '#ffa23f'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(0), Y(0), 40, 0, -nuA, nuA > 0); ctx.stroke();
-    label(ctx, `ν = ${A.norm360(nuA * A.RAD).toFixed(1)}°`, X(0) + 52 * Math.cos(-nuA / 2), Y(0) + 52 * Math.sin(-nuA / 2), '#ffbd73', 'center', 11.5);
+    ctx.strokeStyle = C.nu; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(0), Y(0), 40, 0, -nuA, nuA > 0); ctx.stroke();
+    label(ctx, `ν = ${A.norm360(nuA * A.RAD).toFixed(1)}°`, X(0) + 52 * Math.cos(-nuA / 2), Y(0) + 52 * Math.sin(-nuA / 2), C.nuInk, 'center', 11.5);
   }
 
   // 태양
-  dot(ctx, X(0), Y(0), 9, '#ffd56b', 3.4);
-  label(ctx, '태양 (초점 F)', X(0), Y(0) + 22, '#ffd76e', 'center', 11.5);
+  dot(ctx, X(0), Y(0), 9, C.sun, 3.4);
+  label(ctx, '태양 (초점 F)', X(0), Y(0) + 22, C.sunInk, 'center', 11.5);
   // 반지름 벡터
-  ctx.strokeStyle = 'rgba(255,214,107,0.7)'; ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(176,122,0,0.8)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(cur.x), Y(cur.y)); ctx.stroke();
   // 행성과 속도
   if (o.vel) {
     const vc = Math.sqrt(4 * Math.PI * Math.PI * st.M / a); // 평균 정도 속력
     const L = Math.min((cur.v / vc) * 0.1 * Math.min(w, usableH), 0.32 * Math.min(w, usableH));
     const ux = cur.vx / cur.v, uy = cur.vy / cur.v;
-    arrow(ctx, X(cur.x), Y(cur.y), X(cur.x) + ux * L, Y(cur.y) - uy * L, '#7cffb0', 2.4);
-    label(ctx, `v = ${(cur.v * AUYR_TO_KMS).toFixed(2)} km/s`, X(cur.x) + ux * L + 8, Y(cur.y) - uy * L - 10, '#9fffc6', 'left', 12);
+    arrow(ctx, X(cur.x), Y(cur.y), X(cur.x) + ux * L, Y(cur.y) - uy * L, C.vel, 2.4);
+    label(ctx, `v = ${(cur.v * AUYR_TO_KMS).toFixed(2)} km/s`, X(cur.x) + ux * L + 8, Y(cur.y) - uy * L - 10, C.velInk, 'left', 12);
   }
-  dot(ctx, X(cur.x), Y(cur.y), 7, '#5fa8ff', 2.6);
-  label(ctx, `r = ${cur.r.toFixed(3)} AU`, X(cur.x) - 12, Y(cur.y) + 16, '#9fcaff', 'right', 12);
-  if (o.sect) label(ctx, `같은 시간(P/${N}) 동안 쓸고 간 넓이 = πab/${N} = ${(Math.PI * a * b / N).toFixed(4)} AU² (모든 부채꼴이 같다)`, 16, 22, '#ffe08a', 'left', 12.5);
+  dot(ctx, X(cur.x), Y(cur.y), 7, C.planet, 2.6);
+  label(ctx, `r = ${cur.r.toFixed(3)} AU`, X(cur.x) - 12, Y(cur.y) + 16, C.planetInk, 'right', 12);
+  if (o.sect) label(ctx, `같은 시간(P/${N}) 동안 쓸고 간 넓이 = πab/${N} = ${(Math.PI * a * b / N).toFixed(4)} AU² (모든 부채꼴이 같다)`, 16, 22, C.sunInk, 'left', 12.5);
 }
 
 function drawSub() {
   const { ctx, w, h } = M2;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#060914'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, w, h);
   const pad = { l: 56, r: 20, t: 40, b: 26 };
   const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
   if (pw < 40 || ph < 30) return;
@@ -164,28 +168,28 @@ function drawSub() {
     for (let k = 0; k <= n; k++) { const q = orbitState(k / n); pts.push([k / n, q.r, q.v * AUYR_TO_KMS]); }
     const rmax = st.a * (1 + st.e) * 1.05, vmax = Math.max(...pts.map((p) => p[2])) * 1.05;
     const xs = (f) => pad.l + f * pw, yr = (r) => pad.t + ph - (r / rmax) * ph, yv = (v) => pad.t + ph - (v / vmax) * ph;
-    ctx.strokeStyle = 'rgba(80,100,160,0.25)';
-    for (let f = 0; f <= 1.0001; f += 0.25) { ctx.beginPath(); ctx.moveTo(xs(f), pad.t); ctx.lineTo(xs(f), pad.t + ph); ctx.stroke(); label(ctx, `${(f * period()).toFixed(2)}년`, xs(f), h - 12, '#8a96c4', 'center', 10.5, 500); }
+    ctx.strokeStyle = FAINT;
+    for (let f = 0; f <= 1.0001; f += 0.25) { ctx.beginPath(); ctx.moveTo(xs(f), pad.t); ctx.lineTo(xs(f), pad.t + ph); ctx.stroke(); label(ctx, `${(f * period()).toFixed(2)}년`, xs(f), h - 12, MUTED, 'center', 10.5, 500); }
     const line = (idx, ys, color) => { ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); pts.forEach((p, k) => (k ? ctx.lineTo(xs(p[0]), ys(p[idx])) : ctx.moveTo(xs(p[0]), ys(p[idx])))); ctx.stroke(); };
-    line(1, yr, '#9fcaff'); line(2, yv, '#7cffb0');
+    line(1, yr, C.aph); line(2, yv, C.vel);
     const q = orbitState(st.phase);
-    ctx.strokeStyle = '#fff'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(xs(st.phase), pad.t); ctx.lineTo(xs(st.phase), pad.t + ph); ctx.stroke(); ctx.setLineDash([]);
-    dot(ctx, xs(st.phase), yr(q.r), 4, '#9fcaff'); dot(ctx, xs(st.phase), yv(q.v * AUYR_TO_KMS), 4, '#7cffb0');
-    label(ctx, `속력 v (최대 ${vmax.toFixed(1)} km/s)`, w - pad.r, pad.t - 12, '#7cffb0', 'right', 11.5);
-    label(ctx, `거리 r (최대 ${rmax.toFixed(2)} AU)`, w - pad.r - 190, pad.t - 12, '#9fcaff', 'right', 11.5);
-    label(ctx, '근일점 통과 후 시간 →', pad.l + 4, pad.t + 10, '#8a96c4', 'left', 11, 500);
+    ctx.strokeStyle = 'rgba(31,33,41,0.6)'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(xs(st.phase), pad.t); ctx.lineTo(xs(st.phase), pad.t + ph); ctx.stroke(); ctx.setLineDash([]);
+    dot(ctx, xs(st.phase), yr(q.r), 4, C.aph); dot(ctx, xs(st.phase), yv(q.v * AUYR_TO_KMS), 4, C.vel);
+    label(ctx, `속력 v (최대 ${vmax.toFixed(1)} km/s)`, w - pad.r, pad.t - 12, C.velInk, 'right', 11.5);
+    label(ctx, `거리 r (최대 ${rmax.toFixed(2)} AU)`, w - pad.r - 190, pad.t - 12, C.aph, 'right', 11.5);
+    label(ctx, '근일점 통과 후 시간 →', pad.l + 4, pad.t + 10, MUTED, 'left', 11, 500);
   } else {
     const lx = (a) => Math.log10(a), lo = -0.6, hi = 1.75, plo = -0.8, phi = 2.6;
     const xs = (a) => pad.l + ((lx(a) - lo) / (hi - lo)) * pw, ys = (p) => pad.t + ph - ((lx(p) - plo) / (phi - plo)) * ph;
-    ctx.strokeStyle = 'rgba(80,100,160,0.25)';
-    [0.3, 1, 3, 10, 30].forEach((a) => { ctx.beginPath(); ctx.moveTo(xs(a), pad.t); ctx.lineTo(xs(a), pad.t + ph); ctx.stroke(); label(ctx, `${a} AU`, xs(a), h - 12, '#8a96c4', 'center', 10.5, 500); });
-    [0.3, 1, 10, 100].forEach((p) => { ctx.beginPath(); ctx.moveTo(pad.l, ys(p)); ctx.lineTo(w - pad.r, ys(p)); ctx.stroke(); label(ctx, `${p}년`, pad.l - 6, ys(p), '#8a96c4', 'right', 10.5, 500); });
-    ctx.strokeStyle = 'rgba(255,204,77,0.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xs(0.25), ys(Math.pow(0.25, 1.5))); ctx.lineTo(xs(56), ys(Math.pow(56, 1.5))); ctx.stroke();
-    label(ctx, 'P² = a³ (기울기 3/2)', xs(20), ys(Math.pow(20, 1.5)) - 14, '#ffd76e', 'center', 11.5);
-    REAL.forEach(([n, a, p]) => { dot(ctx, xs(a), ys(p), 3.5, '#cfd8ff'); label(ctx, n, xs(a) + 6, ys(p) + 10, '#aab6e0', 'left', 10.5, 500); });
-    dot(ctx, xs(st.a), ys(period()), 6, '#ff5c7a', 2.4);
-    label(ctx, `현재 궤도 (M = ${st.M})`, xs(st.a) + 9, ys(period()) - 12, '#ff9fb2', 'left', 11.5);
-    label(ctx, 'log P = 1.5 log a − 0.5 log M  (P: 년, a: AU)', w - pad.r, pad.t - 12, '#8a96c4', 'right', 11.5);
+    ctx.strokeStyle = FAINT;
+    [0.3, 1, 3, 10, 30].forEach((a) => { ctx.beginPath(); ctx.moveTo(xs(a), pad.t); ctx.lineTo(xs(a), pad.t + ph); ctx.stroke(); label(ctx, `${a} AU`, xs(a), h - 12, MUTED, 'center', 10.5, 500); });
+    [0.3, 1, 10, 100].forEach((p) => { ctx.beginPath(); ctx.moveTo(pad.l, ys(p)); ctx.lineTo(w - pad.r, ys(p)); ctx.stroke(); label(ctx, `${p}년`, pad.l - 6, ys(p), MUTED, 'right', 10.5, 500); });
+    ctx.strokeStyle = 'rgba(176,122,0,0.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xs(0.25), ys(Math.pow(0.25, 1.5))); ctx.lineTo(xs(56), ys(Math.pow(56, 1.5))); ctx.stroke();
+    label(ctx, 'P² = a³ (기울기 3/2)', xs(20), ys(Math.pow(20, 1.5)) - 14, C.sunInk, 'center', 11.5);
+    REAL.forEach(([n, a, p]) => { dot(ctx, xs(a), ys(p), 3.5, 'rgba(31,33,41,0.6)'); label(ctx, n, xs(a) + 6, ys(p) + 10, MUTED, 'left', 10.5, 500); });
+    dot(ctx, xs(st.a), ys(period()), 6, C.now, 2.4);
+    label(ctx, `현재 궤도 (M = ${st.M})`, xs(st.a) + 9, ys(period()) - 12, C.now, 'left', 11.5);
+    label(ctx, 'log P = 1.5 log a − 0.5 log M  (P: 년, a: AU)', w - pad.r, pad.t - 12, MUTED, 'right', 11.5);
   }
 }
 

@@ -63,4 +63,4 @@ js/notes.js      개념 노트 (목차, 수식, 별 목록)
 
 ## 라이선스
 
-교육 목적으로 자유롭게 사용·수정할 수 있습니다. three.js(MIT), KaTeX(MIT), Pretendard(OFL)를 CDN으로 사용합니다.
+교육 목적으로 자유롭게 사용·수정할 수 있습니다. three.js(MIT), KaTeX(MIT)와 Google Fonts의 IBM Plex Sans KR·IBM Plex Mono·Noto Serif KR(OFL)을 CDN으로 사용합니다.

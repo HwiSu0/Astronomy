@@ -145,8 +145,13 @@ function resize() { M = setupCanvas($('#cMain')); S2 = setupCanvas($('#cSub')); 
 new ResizeObserver(resize).observe($('.stage'));
 resize();
 
-const COLORS = { earth: '#5fa8ff', sun: '#ffcc4d', pro: '#6ea8ff', retro: '#ff5c7a', ring: '#1b2547' };
-function pColor() { return state.key === 'custom' ? '#e6e6ff' : A.PLANETS[state.key].color; }
+// 밝은 종이 바탕용 그림 색
+const INK = '#1f2129', MUTED = '#6b6e7a', FAINT = 'rgba(31,33,41,0.12)', PAPER = '#fbfaf8';
+const COLORS = { earth: '#2a6fd0', sun: '#e9a514', sunInk: '#9a6200', pro: '#2a62c9', retro: '#d23a50', stat: '#b07a00', elong: '#d4650c', elongInk: '#b5540a' };
+// 행성 색: astro.js의 색은 밤하늘용(밝은 색)이므로 그림에서는 진한 색을 쓴다
+const PCOL = { mercury: '#7d7468', venus: '#b38a12', earth: '#2a6fd0', mars: '#cf4a26', jupiter: '#a8743c', saturn: '#94761c', uranus: '#23918f', neptune: '#3459c9', custom: '#5b4fc7' };
+function pColor() { return PCOL[state.key]; }
+function pSkyColor() { return state.key === 'custom' ? '#e6e6ff' : A.PLANETS[state.key].color; }
 function pName() { return state.key === 'custom' ? '가상 행성' : A.PLANETS[state.key].ko; }
 
 function fmtT(t) {
@@ -165,15 +170,17 @@ function rayCircle(px, py, dx, dy, cx, cy, R) {
   const t = -b + Math.sqrt(disc);
   return t > 0 ? [px + dx * t, py + dy * t] : null;
 }
-function label(ctx, text, x, y, color = '#dfe6ff', align = 'left', size = 12.5, weight = 600) {
-  ctx.font = `${weight} ${size}px Pretendard Variable, Pretendard, sans-serif`;
+function label(ctx, text, x, y, color = INK, align = 'left', size = 12.5, weight = 600) {
+  ctx.font = `${Math.min(weight, 700)} ${size}px 'IBM Plex Sans KR', sans-serif`;
   ctx.textAlign = align; ctx.textBaseline = 'middle';
-  ctx.lineWidth = 3.5; ctx.strokeStyle = 'rgba(4,6,13,0.9)'; ctx.strokeText(text, x, y);
+  ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(251,250,248,0.92)'; ctx.strokeText(text, x, y);
   ctx.fillStyle = color; ctx.fillText(text, x, y);
 }
-function dot(ctx, x, y, r, color, glow = 0) {
-  if (glow) { const g = ctx.createRadialGradient(x, y, 0, x, y, r * glow); g.addColorStop(0, color); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * glow, 0, TAU); ctx.fill(); }
+function dot(ctx, x, y, r, color, halo = 0) {
+  // halo: 큰 천체를 구별하기 위한 옅은 테두리 (빛 번짐 효과는 쓰지 않음)
+  if (halo) { ctx.fillStyle = hexA(color, 0.16); ctx.beginPath(); ctx.arc(x, y, r + 2 + halo, 0, TAU); ctx.fill(); }
   ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  if (halo) { ctx.strokeStyle = PAPER; ctx.lineWidth = 1.2; ctx.stroke(); }
 }
 function nearEvent(t, tol) {
   let best = null;
@@ -184,16 +191,16 @@ function nearEvent(t, tol) {
 function drawRing(ctx, cx, cy, R) {
   const band = 13;
   ctx.save();
-  ctx.lineWidth = band * 2; ctx.strokeStyle = 'rgba(40,52,100,0.35)';
+  ctx.lineWidth = band * 2; ctx.strokeStyle = '#efede6';
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
-  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(110,140,220,0.35)';
+  ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(31,33,41,0.22)';
   ctx.beginPath(); ctx.arc(cx, cy, R - band, 0, TAU); ctx.stroke();
   ctx.beginPath(); ctx.arc(cx, cy, R + band, 0, TAU); ctx.stroke();
   // 별자리 경계와 이름
   for (let i = 0; i < ZODIAC.length; i++) {
     const [l0, name] = ZODIAC[i], l1 = ZODIAC[(i + 1) % ZODIAC.length][0];
     const a0 = -l0 * A.DEG;
-    ctx.strokeStyle = 'rgba(110,140,220,0.45)';
+    ctx.strokeStyle = 'rgba(31,33,41,0.28)';
     ctx.beginPath(); ctx.moveTo(cx + (R - band) * Math.cos(a0), cy + (R - band) * Math.sin(a0)); ctx.lineTo(cx + (R + band) * Math.cos(a0), cy + (R + band) * Math.sin(a0)); ctx.stroke();
     const mid = l0 + A.norm360(l1 - l0) / 2, am = -mid * A.DEG;
     ctx.save();
@@ -201,17 +208,17 @@ function drawRing(ctx, cx, cy, R) {
     let rot = am + Math.PI / 2;
     if (Math.sin(am) > 0) rot += Math.PI;
     ctx.rotate(rot);
-    ctx.font = '600 11px Pretendard Variable, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(170,190,240,0.85)'; ctx.fillText(name, 0, 0);
+    ctx.font = "500 11px 'IBM Plex Sans KR', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#5a5d68'; ctx.fillText(name, 0, 0);
     ctx.restore();
   }
   // 황경 눈금
   for (let l = 0; l < 360; l += 10) {
     const a = -l * A.DEG, big = l % 30 === 0;
-    ctx.strokeStyle = big ? 'rgba(200,215,255,0.7)' : 'rgba(150,170,230,0.35)';
+    ctx.strokeStyle = big ? 'rgba(31,33,41,0.55)' : 'rgba(31,33,41,0.25)';
     ctx.beginPath(); ctx.moveTo(cx + (R + band) * Math.cos(a), cy + (R + band) * Math.sin(a));
     ctx.lineTo(cx + (R + band + (big ? 7 : 4)) * Math.cos(a), cy + (R + band + (big ? 7 : 4)) * Math.sin(a)); ctx.stroke();
-    if (big) label(ctx, `${l}°`, cx + (R + band + 17) * Math.cos(a), cy + (R + band + 17) * Math.sin(a), 'rgba(170,185,230,0.8)', 'center', 10, 500);
+    if (big) label(ctx, `${l}°`, cx + (R + band + 17) * Math.cos(a), cy + (R + band + 17) * Math.sin(a), MUTED, 'center', 10, 500);
   }
   ctx.restore();
 }
@@ -220,9 +227,7 @@ function drawMain() {
   const { ctx, w, h } = M;
   const o = opt();
   ctx.clearRect(0, 0, w, h);
-  const bg = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
-  bg.addColorStop(0, '#0b1022'); bg.addColorStop(1, '#03050b');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, w, h);
 
   const t = state.t, gd = geo(t), S = synodic();
   const geoF = state.frame === 'geo';
@@ -244,11 +249,11 @@ function drawMain() {
       for (let k = 0; k <= 240; k++) { const p = fn(t + (period * k) / 240); k ? ctx.lineTo(X(p), Y(p)) : ctx.moveTo(X(p), Y(p)); }
       ctx.stroke();
     };
-    orbit(earthPos, earthPeriod(), 'rgba(95,168,255,0.55)', 1.4);
-    orbit(planetPos, planetPeriod(), hexA(pColor(), 0.55), 1.4);
+    orbit(earthPos, earthPeriod(), hexA(COLORS.earth, 0.5), 1.3);
+    orbit(planetPos, planetPeriod(), hexA(pColor(), 0.6), 1.3);
   } else {
     // 지구 중심: 태양의 겉보기 궤도
-    ctx.strokeStyle = 'rgba(255,204,77,0.35)'; ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = hexA(COLORS.sun, 0.6); ctx.lineWidth = 1.2; ctx.setLineDash([4, 4]);
     ctx.beginPath(); ctx.arc(cx, cy, gd.rE * s, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   }
 
@@ -277,14 +282,14 @@ function drawMain() {
   if (o.sun) {
     const d = norm2(Ss[0] - Es[0], Ss[1] - Es[1]);
     const q = rayCircle(Es[0], Es[1], d[0], d[1], cx, cy, ringR);
-    if (q) { ctx.strokeStyle = 'rgba(255,204,77,0.45)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(...Es); ctx.lineTo(...q); ctx.stroke(); ctx.setLineDash([]); dot(ctx, q[0], q[1], 5, COLORS.sun, 2.5); label(ctx, '태양의 겉보기 위치', q[0], q[1] + 16, '#ffd76e', 'center', 11); }
+    if (q) { ctx.strokeStyle = hexA(COLORS.sun, 0.75); ctx.setLineDash([5, 5]); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(...Es); ctx.lineTo(...q); ctx.stroke(); ctx.setLineDash([]); dot(ctx, q[0], q[1], 5, COLORS.sun, 1); label(ctx, '태양의 겉보기 위치', q[0], q[1] + 16, COLORS.sunInk, 'center', 11); }
   }
   if (o.sight) {
     const d = norm2(Ps[0] - Es[0], Ps[1] - Es[1]);
     const q = rayCircle(Es[0], Es[1], d[0], d[1], cx, cy, ringR);
     if (q) {
       ctx.strokeStyle = hexA(pColor(), 0.85); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(...Es); ctx.lineTo(...q); ctx.stroke();
-      dot(ctx, q[0], q[1], 5.5, pColor(), 2.6);
+      dot(ctx, q[0], q[1], 5.5, pColor(), 1);
       label(ctx, `${pName()}의 겉보기 위치`, q[0], q[1] - 16, pColor(), 'center', 11.5);
     }
   }
@@ -294,26 +299,26 @@ function drawMain() {
     const a1 = Math.atan2(Ss[1] - Es[1], Ss[0] - Es[0]), a2 = Math.atan2(Ps[1] - Es[1], Ps[0] - Es[0]);
     let da = a2 - a1; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU;
     const rr = 34;
-    ctx.strokeStyle = '#ffa23f'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(Es[0], Es[1], rr, a1, a1 + da, da < 0); ctx.stroke();
+    ctx.strokeStyle = COLORS.elong; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(Es[0], Es[1], rr, a1, a1 + da, da < 0); ctx.stroke();
     const am = a1 + da / 2;
-    label(ctx, `이각 ${gd.elong.toFixed(1)}° (${gd.dlam >= 0 ? '동' : '서'})`, Es[0] + (rr + 30) * Math.cos(am), Es[1] + (rr + 14) * Math.sin(am), '#ffbd73', 'center', 12);
+    label(ctx, `이각 ${gd.elong.toFixed(1)}° (${gd.dlam >= 0 ? '동' : '서'})`, Es[0] + (rr + 30) * Math.cos(am), Es[1] + (rr + 14) * Math.sin(am), COLORS.elongInk, 'center', 12);
   }
 
   // 태양, 지구, 행성
-  dot(ctx, Ss[0], Ss[1], geoF ? 7 : 10, '#ffd56b', 3.2);
-  label(ctx, '태양', Ss[0] + 14, Ss[1] - 12, '#ffd76e');
-  dot(ctx, Es[0], Es[1], 6.5, COLORS.earth, 2.4);
-  label(ctx, '지구', Es[0] + 11, Es[1] + 13, '#9fcaff');
-  dot(ctx, Ps[0], Ps[1], 6.5, pColor(), 2.6);
+  dot(ctx, Ss[0], Ss[1], geoF ? 7 : 10, COLORS.sun, 3);
+  label(ctx, '태양', Ss[0] + 14, Ss[1] - 12, COLORS.sunInk);
+  dot(ctx, Es[0], Es[1], 6.5, COLORS.earth, 1.5);
+  label(ctx, '지구', Es[0] + 11, Es[1] + 13, COLORS.earth);
+  dot(ctx, Ps[0], Ps[1], 6.5, pColor(), 1.5);
   label(ctx, pName(), Ps[0] + 11, Ps[1] - 13, pColor());
 
   if (o.labels) {
     const ev = nearEvent(t, Math.max(1.5, S * 0.015));
-    if (ev && !ev.kind.startsWith('stat')) label(ctx, `★ ${ev.name}`, Ps[0], Ps[1] + 26, '#ffffff', 'center', 14, 800);
+    if (ev && !ev.kind.startsWith('stat')) label(ctx, ev.name, Ps[0], Ps[1] + 26, INK, 'center', 14, 700);
   }
   // 공전 방향 안내
-  label(ctx, '황도 북극에서 내려다본 모습 · 공전 방향: 시계 반대 방향', 14, h - barReserve() - 28, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
-  label(ctx, '바깥 띠: 황도 12궁 별자리 (무한히 멀다고 가정)', 14, h - barReserve() - 12, 'rgba(150,170,230,0.75)', 'left', 11.5, 500);
+  label(ctx, '황도 북극에서 내려다본 모습 · 공전 방향: 시계 반대 방향', 14, h - barReserve() - 28, MUTED, 'left', 11.5, 400);
+  label(ctx, '바깥 띠: 황도 12궁 별자리 (무한히 멀다고 가정)', 14, h - barReserve() - 12, MUTED, 'left', 11.5, 400);
 }
 
 function drawRetroDiagram(ctx, X, Y, cx, cy, ringR) {
@@ -331,13 +336,13 @@ function drawRetroDiagram(ctx, X, Y, cx, cy, ringR) {
     const e = [X(q.E), Y(q.E)], p = [X(q.P), Y(q.P)];
     const d = norm2(p[0] - e[0], p[1] - e[1]);
     const z = rayCircle(e[0], e[1], d[0], d[1], cx, cy, ringR);
-    const col = `hsla(${200 + k * 18}, 90%, 68%, 0.9)`;
-    ctx.strokeStyle = `hsla(${200 + k * 18}, 90%, 68%, 0.45)`; ctx.lineWidth = 1.1;
-    if (z) { ctx.beginPath(); ctx.moveTo(...e); ctx.lineTo(...z); ctx.stroke(); dot(ctx, z[0], z[1], 3.5, col); label(ctx, String(k + 1), z[0] + (z[0] - cx) * 0.06, z[1] + (z[1] - cy) * 0.06, col, 'center', 11, 800); }
+    const col = `hsla(${200 + k * 18}, 70%, 40%, 0.95)`;
+    ctx.strokeStyle = `hsla(${200 + k * 18}, 70%, 45%, 0.5)`; ctx.lineWidth = 1.1;
+    if (z) { ctx.beginPath(); ctx.moveTo(...e); ctx.lineTo(...z); ctx.stroke(); dot(ctx, z[0], z[1], 3.5, col); label(ctx, String(k + 1), z[0] + (z[0] - cx) * 0.06, z[1] + (z[1] - cy) * 0.06, col, 'center', 11, 700); }
     dot(ctx, e[0], e[1], 3, col); label(ctx, String(k + 1), e[0] - 9, e[1] + 9, col, 'center', 10, 700);
     dot(ctx, p[0], p[1], 3, col); label(ctx, String(k + 1), p[0] + 9, p[1] - 9, col, 'center', 10, 700);
   });
-  label(ctx, `역행 원리: ${fmtT(times[0])} ~ ${fmtT(times[8])}, ${D.toFixed(0)}일 간격 (번호 순서대로 겉보기 위치가 앞→뒤→앞)`, 14, 58 + 4, '#cfd8ff', 'left', 12, 600);
+  label(ctx, `역행 원리: ${fmtT(times[0])} ~ ${fmtT(times[8])}, ${D.toFixed(0)}일 간격 (번호 순서대로 겉보기 위치가 앞→뒤→앞)`, 14, 58 + 4, INK, 'left', 12, 600);
 }
 
 function norm2(x, y) { const l = Math.hypot(x, y) || 1; return [x / l, y / l]; }
@@ -351,7 +356,7 @@ function hexA(hex, a) {
 function drawStrip() {
   const { ctx, w, h } = S2;
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = '#060914'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, w, h);
   const S = synodic(), t = state.t;
   const pad = { l: 52, r: 16, t: 40, b: 26 };
   const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
@@ -371,16 +376,16 @@ function drawStrip() {
     const m = (hi - lo) * 0.08 + 1; lo -= m; hi += m;
     const xs = (tt) => pad.l + ((tt - (t - W / 2)) / W) * pw, ys = (l) => pad.t + ph - ((l - lo) / (hi - lo)) * ph;
     // 격자
-    ctx.strokeStyle = 'rgba(80,100,160,0.25)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = FAINT; ctx.lineWidth = 1;
     const stepL = niceStep((hi - lo) / 4);
     for (let l = Math.ceil(lo / stepL) * stepL; l <= hi; l += stepL) {
       ctx.beginPath(); ctx.moveTo(pad.l, ys(l)); ctx.lineTo(w - pad.r, ys(l)); ctx.stroke();
-      label(ctx, `${A.norm360(l).toFixed(0)}°`, pad.l - 6, ys(l), '#8a96c4', 'right', 10.5, 500);
+      label(ctx, `${A.norm360(l).toFixed(0)}°`, pad.l - 6, ys(l), MUTED, 'right', 10.5, 500);
     }
     const stepT = niceStep(W / 6);
     for (let tt = Math.ceil((t - W / 2) / stepT) * stepT; tt <= t + W / 2; tt += stepT) {
       ctx.beginPath(); ctx.moveTo(xs(tt), pad.t); ctx.lineTo(xs(tt), pad.t + ph); ctx.stroke();
-      label(ctx, fmtTShort(tt), xs(tt), h - 12, '#8a96c4', 'center', 10.5, 500);
+      label(ctx, fmtTShort(tt), xs(tt), h - 12, MUTED, 'center', 10.5, 500);
     }
     // 곡선
     for (let k = 1; k < pts.length; k++) {
@@ -392,14 +397,14 @@ function drawStrip() {
     for (const e of events) {
       if (e.t < t - W / 2 || e.t > t + W / 2) continue;
       const k = Math.round(((e.t - (t - W / 2)) / W) * n), y = ys(pts[Math.max(0, Math.min(n, k))][1]);
-      dot(ctx, xs(e.t), y, 3.2, e.kind.startsWith('stat') ? '#ffd76e' : '#ffffff');
-      label(ctx, e.name.replace(/ \d.*$/, ''), xs(e.t), y - 11, e.kind.startsWith('stat') ? '#ffd76e' : '#dfe6ff', 'center', 10.5, 600);
+      dot(ctx, xs(e.t), y, 3.2, e.kind.startsWith('stat') ? COLORS.stat : INK);
+      label(ctx, e.name.replace(/ \d.*$/, ''), xs(e.t), y - 11, e.kind.startsWith('stat') ? COLORS.stat : INK, 'center', 10.5, 600);
     }
-    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = 'rgba(31,33,41,0.6)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
     ctx.beginPath(); ctx.moveTo(xs(t), pad.t); ctx.lineTo(xs(t), pad.t + ph); ctx.stroke(); ctx.setLineDash([]);
-    dot(ctx, xs(t), ys(pts[n / 2][1]), 4.5, pColor(), 2.5);
-    label(ctx, '↑ 황경 (동쪽)', pad.l + 4, pad.t - 10, '#8a96c4', 'left', 11, 600);
-    label(ctx, '파랑: 순행 · 빨강: 역행 · 노랑: 유', w - pad.r, pad.t - 10, '#8a96c4', 'right', 11, 500);
+    dot(ctx, xs(t), ys(pts[n / 2][1]), 4.5, pColor(), 1);
+    label(ctx, '↑ 황경 (동쪽)', pad.l + 4, pad.t - 10, MUTED, 'left', 11, 600);
+    label(ctx, '파랑: 순행 · 빨강: 역행 · 황토: 유', w - pad.r, pad.t - 10, MUTED, 'right', 11, 500);
   } else {
     const Tr = (2 * statAngle(planetA()) / 360) * S;
     const W = A.clamp(Tr * 3.2, 60, 520), n = 300;
@@ -418,39 +423,39 @@ function drawStrip() {
     const ex = sy / sx;
     const xs = (l) => pad.l + pw - (l - lo) * sx, ys = (b) => pad.t + ph / 2 - b * sy;
     // 황도 별자리
-    ctx.font = '600 11px Pretendard Variable, sans-serif';
+    ctx.font = "500 11px 'IBM Plex Sans KR', sans-serif";
     for (let i = 0; i < ZODIAC.length; i++) {
       for (let wrap = -720; wrap <= 720; wrap += 360) {
         const l0 = ZODIAC[i][0] + wrap, l1 = l0 + A.norm360(ZODIAC[(i + 1) % ZODIAC.length][0] - ZODIAC[i][0]);
         if (l1 < lo || l0 > hi) continue;
-        ctx.strokeStyle = 'rgba(110,140,220,0.3)'; ctx.setLineDash([2, 4]);
+        ctx.strokeStyle = 'rgba(31,33,41,0.2)'; ctx.setLineDash([2, 4]);
         if (l0 >= lo && l0 <= hi) { ctx.beginPath(); ctx.moveTo(xs(l0), pad.t); ctx.lineTo(xs(l0), pad.t + ph); ctx.stroke(); }
         ctx.setLineDash([]);
         const mid = (Math.max(l0, lo) + Math.min(l1, hi)) / 2;
-        label(ctx, ZODIAC[i][1], xs(mid), pad.t + 8, 'rgba(160,180,235,0.75)', 'center', 11, 600);
+        label(ctx, ZODIAC[i][1], xs(mid), pad.t + 8, MUTED, 'center', 11, 500);
       }
     }
-    ctx.strokeStyle = 'rgba(255,204,77,0.45)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = hexA(COLORS.sun, 0.7); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad.l, ys(0)); ctx.lineTo(w - pad.r, ys(0)); ctx.stroke();
-    label(ctx, '황도', pad.l + 4, ys(0) - 9, '#ffd76e', 'left', 10.5);
+    label(ctx, '황도', pad.l + 4, ys(0) - 9, COLORS.sunInk, 'left', 10.5);
     const stepL = niceStep((hi - lo) / 6);
-    for (let l = Math.ceil(lo / stepL) * stepL; l <= hi; l += stepL) label(ctx, `${A.norm360(l).toFixed(0)}°`, xs(l), h - 12, '#8a96c4', 'center', 10.5, 500);
+    for (let l = Math.ceil(lo / stepL) * stepL; l <= hi; l += stepL) label(ctx, `${A.norm360(l).toFixed(0)}°`, xs(l), h - 12, MUTED, 'center', 10.5, 500);
     for (let k = 1; k < pts.length; k++) {
       const retro = pts[k][1] < pts[k - 1][1];
       ctx.strokeStyle = retro ? COLORS.retro : COLORS.pro; ctx.lineWidth = 2.2;
       ctx.beginPath(); ctx.moveTo(xs(pts[k - 1][1]), ys(pts[k - 1][2])); ctx.lineTo(xs(pts[k][1]), ys(pts[k][2])); ctx.stroke();
     }
     const every = Math.max(1, Math.round(n / (W / 10)));
-    for (let k = 0; k <= n; k += every) dot(ctx, xs(pts[k][1]), ys(pts[k][2]), 1.6, '#cfd8ff');
+    for (let k = 0; k <= n; k += every) dot(ctx, xs(pts[k][1]), ys(pts[k][2]), 1.6, 'rgba(31,33,41,0.45)');
     for (const e of events) {
       if (e.t < t - W / 2 || e.t > t + W / 2) continue;
       const k = Math.round(((e.t - (t - W / 2)) / W) * n), p = pts[Math.max(0, Math.min(n, k))];
-      dot(ctx, xs(p[1]), ys(p[2]), 3.2, e.kind.startsWith('stat') ? '#ffd76e' : '#fff');
-      label(ctx, `${e.name.replace(/ \d.*$/, '')} ${fmtTShort(e.t)}`, xs(p[1]), ys(p[2]) + (p[2] > 0 ? 14 : -13), '#dfe6ff', 'center', 10.5, 600);
+      dot(ctx, xs(p[1]), ys(p[2]), 3.2, e.kind.startsWith('stat') ? COLORS.stat : INK);
+      label(ctx, `${e.name.replace(/ \d.*$/, '')} ${fmtTShort(e.t)}`, xs(p[1]), ys(p[2]) + (p[2] > 0 ? 14 : -13), INK, 'center', 10.5, 600);
     }
-    dot(ctx, xs(pts[n / 2][1]), ys(pts[n / 2][2]), 5, pColor(), 2.6);
-    label(ctx, `← 동쪽 (남쪽 하늘을 볼 때)   ·   황위는 ${ex.toFixed(1)}배 과장`, w - pad.r, pad.t - 10, '#8a96c4', 'right', 11, 500);
-    label(ctx, `${fmtT(t - W / 2)} ~ ${fmtT(t + W / 2)}`, pad.l + 330, pad.t - 10, '#8a96c4', 'left', 11, 500);
+    dot(ctx, xs(pts[n / 2][1]), ys(pts[n / 2][2]), 5, pColor(), 1);
+    label(ctx, `← 동쪽 (남쪽 하늘을 볼 때)   ·   황위는 ${ex.toFixed(1)}배 과장`, w - pad.r, pad.t - 10, MUTED, 'right', 11, 500);
+    label(ctx, `${fmtT(t - W / 2)} ~ ${fmtT(t + W / 2)}`, pad.l + 330, pad.t - 10, MUTED, 'left', 11, 500);
   }
 }
 function niceStep(x) {
@@ -477,7 +482,7 @@ function drawScope(gd) {
   if (gd.dlam < 0) ctx.scale(-1, 1); // 새벽(서쪽 이각): 태양이 동쪽(왼쪽)에 있음
   ctx.fillStyle = '#1d1d26'; ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
   const k = A.cosd(gd.phase);
-  ctx.fillStyle = pColor();
+  ctx.fillStyle = pSkyColor();
   ctx.beginPath();
   ctx.moveTo(0, -r);
   ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);
@@ -489,7 +494,7 @@ function drawScope(gd) {
   }
   ctx.restore();
   ctx.strokeStyle = '#333'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c, c, c - 2, 0, TAU); ctx.stroke();
-  ctx.font = '600 20px Pretendard Variable, sans-serif'; ctx.fillStyle = '#8a96c4'; ctx.textAlign = 'center';
+  ctx.font = "500 20px 'IBM Plex Sans KR', sans-serif"; ctx.fillStyle = '#8a8c95'; ctx.textAlign = 'center';
   ctx.fillText('동', 18, c + 6); ctx.fillText('서', W - 18, c + 6);
   return diam;
 }
@@ -545,7 +550,7 @@ $('#events').addEventListener('click', (e) => {
 // ------------------------------------------------------------------ 컨트롤
 function buildPlanetButtons() {
   const keys = [...KEYS, ...(isReal() ? [] : ['custom'])];
-  $('#planetBtns').innerHTML = keys.map((k) => `<button class="btn small ${k === state.key ? 'on' : ''}" data-planet="${k}" style="border-color:${k === state.key ? (k === 'custom' ? '#e6e6ff' : A.PLANETS[k].color) : ''}">${k === 'custom' ? '가상 행성' : A.PLANETS[k].ko}</button>`).join('');
+  $('#planetBtns').innerHTML = keys.map((k) => `<button class="btn small ${k === state.key ? 'on' : ''}" data-planet="${k}" style="border-color:${k === state.key ? PCOL[k] : ''}">${k === 'custom' ? '가상 행성' : A.PLANETS[k].ko}</button>`).join('');
   $('#customBox').classList.toggle('hidden', isReal());
 }
 $('#planetBtns').addEventListener('click', (e) => {

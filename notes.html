@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>개념 노트 · Astronomy Lab</title>
   <meta name="description" content="천구, 좌표계, 일주·연주 운동, 행성의 운동, 케플러 법칙 — 하이탑 지구과학Ⅱ 기본 개념과 천문 올림피아드 심화 정리.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -13,7 +15,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.4" transform="rotate(-23.4 12 12)" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/></svg><span>Astronomy Lab</span></a>
     <nav class="nav">
       <a href="celestial.html">천구·좌표계</a>
       <a href="planets.html">행성의 운동</a>
@@ -28,7 +30,7 @@
     <nav class="toc" id="toc"></nav>
     <article class="doc" id="doc">
       <h1>천문학 개념 노트</h1>
-      <p class="lead">하이탑 지구과학Ⅱ ‘행성의 운동’ 단원(천체의 좌표계, 행성의 겉보기 운동, 케플러 법칙)의 핵심을 기본으로 정리하고, 천문 올림피아드에서 필요한 심화 내용을 <span style="color:#e2b8ff">보라색 상자</span>로 덧붙였다. 각 절의 <span class="labs-link" style="pointer-events:none">🔬 실험</span> 링크를 누르면 해당 개념을 시뮬레이션에서 바로 확인할 수 있다.</p>
+      <p class="lead">하이탑 지구과학Ⅱ ‘행성의 운동’ 단원(천체의 좌표계, 행성의 겉보기 운동, 케플러 법칙)의 핵심을 기본으로 정리하고, 천문 올림피아드에서 필요한 심화 내용을 <span style="color:var(--gal);font-weight:600">보라색 상자</span>로 덧붙였다. 각 절의 <span class="labs-link" style="pointer-events:none">실험</span> 링크를 누르면 해당 개념을 시뮬레이션에서 바로 확인할 수 있다.</p>
 
       <!-- =============================================================== Ⅰ -->
       <h2 id="s1">Ⅰ. 천구</h2>
@@ -49,39 +51,39 @@
         <tr><td>시간권</td><td>천구 북극·남극과 천체를 지나는 대원 (천구의 적도에 수직)</td></tr>
         <tr><td>일주권</td><td>천체가 일주 운동하며 그리는 소원 (천구의 적도와 나란함)</td></tr>
       </table>
-      <a class="labs-link" href="celestial.html?step=1">🔬 실험: 천구와 관측자</a><a class="labs-link" href="celestial.html?step=3">🔬 실험: 자오선과 묘유선</a>
+      <a class="labs-link" href="celestial.html?step=1">실험: 천구와 관측자</a><a class="labs-link" href="celestial.html?step=3">실험: 자오선과 묘유선</a>
 
       <h3 id="s1-2">2. 천구의 극과 위도</h3>
       <div class="callout basic"><span class="ttl">핵심</span>천구 북극의 고도 $h_P$ = 관측자의 위도 $\varphi$ &nbsp;·&nbsp; 천구의 적도가 자오선과 만나는 점(남쪽)의 고도 = $90^\circ-\varphi$</div>
       <figure class="svg">
         <svg viewBox="0 0 520 300" width="520" aria-label="위도와 천구 북극의 고도">
-          <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff8a8a"/></marker></defs>
-          <circle cx="170" cy="170" r="95" fill="#12305a" stroke="#5fa8ff" stroke-width="2"/>
-          <line x1="170" y1="40" x2="170" y2="290" stroke="#ff8a8a" stroke-width="2" stroke-dasharray="6 5" marker-end=""/>
-          <text x="176" y="50" fill="#ff9a9a" font-size="13">자전축 (→ 천구 북극)</text>
-          <line x1="60" y1="170" x2="290" y2="170" stroke="#9aa5cc" stroke-dasharray="4 4"/>
-          <text x="62" y="186" fill="#9aa5cc" font-size="12">적도면</text>
-          <line x1="170" y1="170" x2="242.8" y2="108.9" stroke="#e8ecff" stroke-width="1.5"/>
-          <path d="M 205 170 A 35 35 0 0 0 196.8 147.5" fill="none" stroke="#ffcc4d" stroke-width="2"/>
-          <text x="210" y="162" fill="#ffcc4d" font-size="14" font-weight="700">φ</text>
-          <circle cx="242.8" cy="108.9" r="5" fill="#ffcc4d"/>
-          <text x="252" y="130" fill="#ffcc4d" font-size="13">관측자</text>
-          <line x1="242.8" y1="108.9" x2="300.3" y2="60.7" stroke="#e8ecff" stroke-width="1.5" stroke-dasharray="3 3"/>
-          <text x="304" y="58" fill="#e8ecff" font-size="13">천정</text>
-          <line x1="182.4" y1="37.0" x2="303.2" y2="180.8" stroke="#5be39a" stroke-width="2.2"/>
-          <text x="300" y="196" fill="#5be39a" font-size="13">지평면 (남쪽)</text>
-          <text x="128" y="34" fill="#5be39a" font-size="13">지평면 (북쪽)</text>
-          <line x1="242.8" y1="108.9" x2="242.8" y2="22" stroke="#ff8a8a" stroke-width="2" marker-end="url(#ar)"/>
-          <text x="250" y="24" fill="#ff9a9a" font-size="13">천구 북극 방향 (자전축과 나란함)</text>
-          <path d="M 242.8 68.9 A 40 40 0 0 0 217.1 78.3" fill="none" stroke="#ffcc4d" stroke-width="2"/>
-          <text x="208" y="70" fill="#ffcc4d" font-size="14" font-weight="700">h<tspan font-size="10" dy="3">P</tspan></text>
-          <text x="340" y="250" fill="#9aa5cc" font-size="12.5">별은 무한히 멀어서 관측자에서 본 방향과</text>
-          <text x="340" y="268" fill="#9aa5cc" font-size="12.5">지구 중심에서 본 방향이 같다 → h<tspan font-size="9" dy="3">P</tspan><tspan dy="-3"> = φ</tspan></text>
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#cf3434"/></marker></defs>
+          <circle cx="170" cy="170" r="95" fill="#dde8f7" stroke="#2a6fd0" stroke-width="2"/>
+          <line x1="170" y1="40" x2="170" y2="290" stroke="#cf3434" stroke-width="2" stroke-dasharray="6 5" marker-end=""/>
+          <text x="176" y="50" fill="#b52a2a" font-size="13">자전축 (→ 천구 북극)</text>
+          <line x1="60" y1="170" x2="290" y2="170" stroke="#6b6e7a" stroke-dasharray="4 4"/>
+          <text x="62" y="186" fill="#6b6e7a" font-size="12">적도면</text>
+          <line x1="170" y1="170" x2="242.8" y2="108.9" stroke="#1f2129" stroke-width="1.5"/>
+          <path d="M 205 170 A 35 35 0 0 0 196.8 147.5" fill="none" stroke="#b07a00" stroke-width="2"/>
+          <text x="210" y="162" fill="#b07a00" font-size="14" font-weight="700">φ</text>
+          <circle cx="242.8" cy="108.9" r="5" fill="#b07a00"/>
+          <text x="252" y="130" fill="#b07a00" font-size="13">관측자</text>
+          <line x1="242.8" y1="108.9" x2="300.3" y2="60.7" stroke="#1f2129" stroke-width="1.5" stroke-dasharray="3 3"/>
+          <text x="304" y="58" fill="#1f2129" font-size="13">천정</text>
+          <line x1="182.4" y1="37.0" x2="303.2" y2="180.8" stroke="#1d8a50" stroke-width="2.2"/>
+          <text x="300" y="196" fill="#1d8a50" font-size="13">지평면 (남쪽)</text>
+          <text x="128" y="34" fill="#1d8a50" font-size="13">지평면 (북쪽)</text>
+          <line x1="242.8" y1="108.9" x2="242.8" y2="22" stroke="#cf3434" stroke-width="2" marker-end="url(#ar)"/>
+          <text x="250" y="24" fill="#b52a2a" font-size="13">천구 북극 방향 (자전축과 나란함)</text>
+          <path d="M 242.8 68.9 A 40 40 0 0 0 217.1 78.3" fill="none" stroke="#b07a00" stroke-width="2"/>
+          <text x="208" y="70" fill="#b07a00" font-size="14" font-weight="700">h<tspan font-size="10" dy="3">P</tspan></text>
+          <text x="340" y="250" fill="#6b6e7a" font-size="12.5">별은 무한히 멀어서 관측자에서 본 방향과</text>
+          <text x="340" y="268" fill="#6b6e7a" font-size="12.5">지구 중심에서 본 방향이 같다 → h<tspan font-size="9" dy="3">P</tspan><tspan dy="-3"> = φ</tspan></text>
         </svg>
         <figcaption>그림 1. 천구 북극의 고도는 위도와 같다 (엇각·동위각 관계)</figcaption>
       </figure>
       <p>위도에 따라 천구의 모습이 달라진다: 북극(φ = 90°)에서는 천구 북극이 천정에 있고 천구의 적도 = 지평선, 적도(φ = 0°)에서는 천구의 극이 북점·남점에 있고 천구의 적도가 천정을 지난다. 남반구(φ &lt; 0)에서는 천구 남극이 지평선 위 |φ|의 고도에 있다.</p>
-      <a class="labs-link" href="celestial.html?step=2">🔬 실험: 위도를 바꾸며 천구 북극 보기</a>
+      <a class="labs-link" href="celestial.html?step=2">실험: 위도를 바꾸며 천구 북극 보기</a>
 
       <!-- =============================================================== Ⅱ -->
       <h2 id="s2">Ⅱ. 천체의 좌표계</h2>
@@ -101,7 +103,7 @@
       </ul>
       <div class="callout tip"><span class="ttl">단위 변환</span>$1^h = 15^\circ$, $1^m = 15'$, $1^s = 15''$ &nbsp;·&nbsp; $1^\circ = 4^m$, $1' = 4^s$<br>적위 δ인 곳에서 적경 $\Delta\alpha$ 차이는 실제 각거리로 약 $15^\circ \times \Delta\alpha^h \times \cos\delta$ (적위가 높을수록 일주권이 작아진다)</div>
       <p>적경·적위는 천구에 고정되어 일주 운동과 함께 돌기 때문에 <b>관측 장소와 시각에 무관</b>하다. 그래서 성표와 천체 목록은 적도좌표를 쓴다. 다만 세차 운동으로 기준점이 천천히 움직이므로 기준 분점(J2000.0 등)을 함께 적는다.</p>
-      <a class="labs-link" href="celestial.html?step=5">🔬 실험: 적경과 적위</a>
+      <a class="labs-link" href="celestial.html?step=5">실험: 적경과 적위</a>
 
       <h3 id="s2-3">3. 시간각과 항성시</h3>
       <ul>
@@ -111,7 +113,7 @@
       $$H = \text{LST} - \alpha \qquad (\text{남중: } H = 0 \;\Rightarrow\; \text{LST} = \alpha)$$
       <div class="example"><span class="ttl">예제</span>항성시가 3h 00m일 때 베텔게우스(α = 5h 55m)의 시간각과 남중까지 남은 시간은?
         <details><summary>풀이</summary>$H = 3^h00^m - 5^h55^m = -2^h55^m \;(=21^h05^m)$. 자오선의 <b>동쪽</b>에 있고 항성시로 2h 55m 뒤 남중한다(태양시로는 ×0.99727 → 약 2h 54.5m).</details></div>
-      <a class="labs-link" href="celestial.html?step=6">🔬 실험: 시간각과 항성시</a>
+      <a class="labs-link" href="celestial.html?step=6">실험: 시간각과 항성시</a>
 
       <h3 id="s2-4">4. 황도좌표계</h3>
       <ul>
@@ -120,12 +122,12 @@
         <li><b>황도 북극</b>: 용자리 (α = 18h, δ = +66.56°)</li>
       </ul>
       <p>태양은 늘 β = 0, 행성·달은 황도 근처에 있어 태양계 천체를 다룰 때 편리하다. 춘분 λ☉ = 0°, 하지 90°, 추분 180°, 동지 270°.</p>
-      <div class="callout adv"><span class="ttl">🔭 심화: 적도 ↔ 황도 변환</span>
+      <div class="callout adv"><span class="ttl">심화: 적도 ↔ 황도 변환</span>
         춘분점 방향(x축)을 축으로 ε만큼 회전한 관계이다.
         $$\sin\beta = \sin\delta\cos\varepsilon - \cos\delta\sin\varepsilon\sin\alpha,\qquad \tan\lambda = \frac{\sin\alpha\cos\varepsilon + \tan\delta\sin\varepsilon}{\cos\alpha}$$
         $$\sin\delta = \sin\beta\cos\varepsilon + \cos\beta\sin\varepsilon\sin\lambda,\qquad \tan\alpha = \frac{\sin\lambda\cos\varepsilon - \tan\beta\sin\varepsilon}{\cos\lambda}$$
         태양(β = 0): $\sin\delta_\odot = \sin\varepsilon\sin\lambda_\odot$, $\tan\alpha_\odot = \cos\varepsilon\tan\lambda_\odot$ (α와 λ는 같은 사분면).</div>
-      <a class="labs-link" href="celestial.html?step=11">🔬 실험: 황도좌표계</a>
+      <a class="labs-link" href="celestial.html?step=11">실험: 황도좌표계</a>
 
       <h3 id="s2-5">5. 은하좌표계</h3>
       <ul>
@@ -134,13 +136,13 @@
         <li><b>은위 b</b>: 은하면에서 남북으로 −90° ~ +90°</li>
         <li><b>은하 북극</b>: 머리털자리 (α = 12h 51.4m, δ = +27.13°) → 은하면과 천구의 적도의 경사 = 90° − 27.13° ≈ 62.87°</li>
       </ul>
-      <div class="callout adv"><span class="ttl">🔭 심화: 적도 → 은하 변환</span>
+      <div class="callout adv"><span class="ttl">심화: 적도 → 은하 변환</span>
         은하 북극 $(\alpha_G, \delta_G) = (192.859^\circ, +27.128^\circ)$, 천구 북극의 은경 $l_{\rm NCP} = 122.932^\circ$일 때 (J2000)
         $$\sin b = \sin\delta\sin\delta_G + \cos\delta\cos\delta_G\cos(\alpha-\alpha_G)$$
         $$\cos b\,\sin(l_{\rm NCP}-l) = \cos\delta\,\sin(\alpha-\alpha_G)$$
         $$\cos b\,\cos(l_{\rm NCP}-l) = \sin\delta\cos\delta_G - \cos\delta\sin\delta_G\cos(\alpha-\alpha_G)$$
         실제 계산에서는 J2000 적도 직교 좌표에 고정된 3×3 회전 행렬을 곱한다(이 프로그램도 그렇게 계산한다).</div>
-      <a class="labs-link" href="celestial.html?step=12">🔬 실험: 은하좌표계</a>
+      <a class="labs-link" href="celestial.html?step=12">실험: 은하좌표계</a>
 
       <h3 id="s2-6">6. 좌표계 한눈에 비교</h3>
       <table>
@@ -169,7 +171,7 @@
       $$\cos h\sin A = -\cos\delta\sin H,\qquad \cos h\cos A = \cos\varphi\sin\delta - \sin\varphi\cos\delta\cos H$$
       <p>반대로 <b>지평 → 적도 변환</b>은 φ와 h, δ와 A, H의 역할을 바꾼 꼴이다.</p>
       $$\sin\delta = \sin\varphi\sin h + \cos\varphi\cos h\cos A,\qquad \cos\delta\sin H = -\cos h\sin A$$
-      <div class="callout adv"><span class="ttl">🔭 자주 쓰는 결과</span>
+      <div class="callout adv"><span class="ttl">자주 쓰는 결과</span>
         <ul>
           <li>남중(H = 0): $h = 90^\circ - |\varphi-\delta|$ · 하방 정중(H = 12h): $h = |\varphi+\delta| - 90^\circ$</li>
           <li>출몰(h = 0): $\cos H_0 = -\tan\varphi\tan\delta$, &nbsp;$\cos A = \sin\delta/\cos\varphi$</li>
@@ -179,7 +181,7 @@
           <li>시차각: $\tan q = \dfrac{\sin H}{\tan\varphi\cos\delta - \sin\delta\cos H}$</li>
           <li>두 천체 사이의 각거리: $\cos\theta = \sin\delta_1\sin\delta_2 + \cos\delta_1\cos\delta_2\cos(\alpha_1-\alpha_2)$</li>
         </ul></div>
-      <div class="callout adv"><span class="ttl">🔭 벡터·회전 행렬로 보기</span>
+      <div class="callout adv"><span class="ttl">벡터·회전 행렬로 보기</span>
         단위 벡터로 쓰면 좌표 변환은 모두 회전이다. 시간각 좌표의 벡터 $\mathbf{u}' = (\cos\delta\cos H,\, -\cos\delta\sin H,\, \sin\delta)$ (x′: 남쪽 자오선 위 적도점, y′: 동점, z′: 천구 북극)와 지평 좌표의 벡터 $\mathbf{u} = (\cos h\cos A,\, \cos h\sin A,\, \sin h)$ (x: 북점, y: 동점, z: 천정) 사이에는
         $$\mathbf{u} = \begin{pmatrix} -\sin\varphi & 0 & \cos\varphi \\ 0 & 1 & 0 \\ \cos\varphi & 0 & \sin\varphi \end{pmatrix}\mathbf{u}'$$
         가 성립한다. 성분을 비교하면 위의 세 식이 바로 나온다. 적도 → 황도는 x축 둘레로 ε 회전, 시간각 → 적경은 z축 둘레로 LST 회전이다.</div>
@@ -187,7 +189,7 @@
         <details><summary>풀이</summary>$\cos A = \sin(-16.7^\circ)/\cos 37.5^\circ = -0.2874/0.7934 = -0.3622 \Rightarrow A = 111.2^\circ$ (정동쪽에서 남쪽으로 21.2°).<br>
         $\cos H_0 = -\tan 37.5^\circ\tan(-16.7^\circ) = 0.7673\times0.3000 = 0.2302 \Rightarrow H_0 = 76.7^\circ = 5^h07^m$<br>
         떠 있는 시간 = $2H_0 = 10^h14^m$ (항성시) ≈ 10h 12m (태양시).</details></div>
-      <a class="labs-link" href="celestial.html?step=13">🔬 실험: 천문 삼각형</a>
+      <a class="labs-link" href="celestial.html?step=13">실험: 천문 삼각형</a>
 
       <!-- =============================================================== Ⅲ -->
       <h2 id="s3">Ⅲ. 일주 운동과 연주 운동</h2>
@@ -206,7 +208,7 @@
         <tr><td>중위도</td><td>(90° − φ) 기울어짐</td><td>지평선과 비스듬함</td><td>주극성·출몰성·전몰성</td></tr>
         <tr><td>적도 (0°)</td><td>수직</td><td>지평선에 수직</td><td>모든 별이 12시간씩 떠 있음, 전천을 볼 수 있음</td></tr>
       </table>
-      <a class="labs-link" href="celestial.html?step=7">🔬 실험: 일주 운동</a><a class="labs-link" href="celestial.html?step=8">🔬 실험: 위도에 따른 일주 운동</a>
+      <a class="labs-link" href="celestial.html?step=7">실험: 일주 운동</a><a class="labs-link" href="celestial.html?step=8">실험: 위도에 따른 일주 운동</a>
 
       <h3 id="s3-2">2. 남중 고도와 주극성</h3>
       $$h_{\text{남중}} = 90^\circ - |\varphi - \delta|,\qquad h_{\text{하방 정중}} = |\varphi + \delta| - 90^\circ$$
@@ -229,7 +231,7 @@
       </table>
       <p class="note">* 대기차(34′)와 태양 반지름(16′)을 고려한 값. 기하학적 중심으로 계산하면 하지 14h 36m, 동지 9h 24m, 춘·추분 정확히 12h.</p>
       $$h_{\odot,\text{남중}} = 90^\circ - \varphi + \delta_\odot \quad(\text{북반구, }\delta_\odot<\varphi)$$
-      <a class="labs-link" href="celestial.html?step=9">🔬 실험: 태양의 연주 운동과 계절별 일주권</a>
+      <a class="labs-link" href="celestial.html?step=9">실험: 태양의 연주 운동과 계절별 일주권</a>
 
       <h3 id="s3-4">4. 항성일과 태양일, 별의 연주 운동</h3>
       <p>지구가 자전하는 동안 공전 궤도를 따라 약 1° 이동하므로, 태양이 다시 남중하려면 약 361° 돌아야 한다.</p>
@@ -239,7 +241,7 @@
         <li>같은 시각에 보면 별자리는 하루 약 1°씩 서쪽으로 이동 → 계절마다 보이는 별자리가 다르다.</li>
         <li>자정에 남중하는 별의 적경 ≈ 태양의 적경 + 12h. (예: 12월 하순 자정에는 α ≈ 6h인 오리온자리 부근이 남중)</li>
       </ul>
-      <a class="labs-link" href="celestial.html?step=10">🔬 실험: 같은 시각, 매일 달라지는 하늘</a>
+      <a class="labs-link" href="celestial.html?step=10">실험: 같은 시각, 매일 달라지는 하늘</a>
 
       <h3 id="s3-5">5. 시간 체계 <span class="level adv">심화</span></h3>
       <ul>
@@ -263,7 +265,7 @@
         <li><b>연주 시차</b>: 지구 공전에 따른 가까운 별의 위치 변화. $d(\text{pc}) = 1/p('')$. 가장 큰 프록시마 센타우리도 0.77″</li>
         <li><b>고유 운동</b>: 별 자체의 운동으로 인한 위치 변화 (바너드 별 약 10.4″/년)</li>
       </ul>
-      <a class="labs-link" href="celestial.html?step=14">🔬 실험: 세차 운동</a>
+      <a class="labs-link" href="celestial.html?step=14">실험: 세차 운동</a>
 
       <!-- =============================================================== Ⅳ -->
       <h2 id="s4">Ⅳ. 행성의 운동</h2>
@@ -274,29 +276,29 @@
         <li><b>유(留)</b>: 순행과 역행이 바뀌는 순간 멈춘 것처럼 보이는 상태</li>
       </ul>
       <p>태양중심설에서는 역행을 ‘추월’로 자연스럽게 설명한다. 더 빠른 지구가 외행성을 앞지르는 동안(충 부근) 지구에서 본 행성의 시선 방향이 뒤로 돌아간다. 행성 궤도면이 황도면과 조금 기울어져 있어 실제 하늘에서는 역행 경로가 고리(loop)나 지그재그 모양이 된다.</p>
-      <a class="labs-link" href="planets.html?planet=mars">🔬 실험: 화성의 역행 (역행 원리 그림 켜기)</a>
+      <a class="labs-link" href="planets.html?planet=mars">실험: 화성의 역행 (역행 원리 그림 켜기)</a>
 
       <h3 id="s4-2">2. 내행성과 외행성의 위치 관계</h3>
       <figure class="svg">
         <svg viewBox="0 0 560 400" width="560" aria-label="행성의 위치 관계">
-          <circle cx="280" cy="190" r="150" fill="none" stroke="#ff7b54" stroke-opacity="0.6" stroke-width="1.5"/>
-          <circle cx="280" cy="190" r="80" fill="none" stroke="#5fa8ff" stroke-opacity="0.7" stroke-width="1.5"/>
-          <circle cx="280" cy="190" r="48" fill="none" stroke="#fff1c1" stroke-opacity="0.7" stroke-width="1.5"/>
-          <circle cx="280" cy="190" r="11" fill="#ffd56b"/><text x="294" y="186" fill="#ffd76e" font-size="12">태양</text>
-          <circle cx="280" cy="270" r="7" fill="#5fa8ff"/><text x="290" y="282" fill="#9fcaff" font-size="12">지구</text>
-          <line x1="280" y1="270" x2="242" y2="219.3" stroke="#fff1c1" stroke-dasharray="3 3"/>
-          <line x1="280" y1="270" x2="318" y2="219.3" stroke="#fff1c1" stroke-dasharray="3 3"/>
-          <line x1="280" y1="270" x2="153.1" y2="270" stroke="#ff7b54" stroke-dasharray="3 3"/>
-          <line x1="280" y1="270" x2="406.9" y2="270" stroke="#ff7b54" stroke-dasharray="3 3"/>
-          <circle cx="280" cy="238" r="5" fill="#fff1c1"/><text x="288" y="246" fill="#fff1c1" font-size="12">내합</text>
-          <circle cx="280" cy="142" r="5" fill="#fff1c1"/><text x="288" y="138" fill="#fff1c1" font-size="12">외합</text>
-          <circle cx="242" cy="219.3" r="5" fill="#fff1c1"/><text x="172" y="214" fill="#fff1c1" font-size="12">동방 최대 이각</text>
-          <circle cx="318" cy="219.3" r="5" fill="#fff1c1"/><text x="326" y="214" fill="#fff1c1" font-size="12">서방 최대 이각</text>
-          <circle cx="280" cy="340" r="6" fill="#ff7b54"/><text x="290" y="356" fill="#ffa184" font-size="12">충</text>
-          <circle cx="280" cy="40" r="6" fill="#ff7b54"/><text x="290" y="36" fill="#ffa184" font-size="12">합</text>
-          <circle cx="153.1" cy="270" r="6" fill="#ff7b54"/><text x="108" y="292" fill="#ffa184" font-size="12">동구</text>
-          <circle cx="406.9" cy="270" r="6" fill="#ff7b54"/><text x="414" y="292" fill="#ffa184" font-size="12">서구</text>
-          <text x="10" y="390" fill="#9aa5cc" font-size="12">황도 북극에서 본 모습 (공전: 시계 반대 방향). 지구에서 태양을 바라볼 때 왼쪽이 동쪽.</text>
+          <circle cx="280" cy="190" r="150" fill="none" stroke="#cf4a26" stroke-opacity="0.6" stroke-width="1.5"/>
+          <circle cx="280" cy="190" r="80" fill="none" stroke="#2a6fd0" stroke-opacity="0.7" stroke-width="1.5"/>
+          <circle cx="280" cy="190" r="48" fill="none" stroke="#a77f0c" stroke-opacity="0.7" stroke-width="1.5"/>
+          <circle cx="280" cy="190" r="11" fill="#e9a514"/><text x="294" y="186" fill="#9a6200" font-size="12">태양</text>
+          <circle cx="280" cy="270" r="7" fill="#2a6fd0"/><text x="290" y="282" fill="#1f5bb0" font-size="12">지구</text>
+          <line x1="280" y1="270" x2="242" y2="219.3" stroke="#a77f0c" stroke-dasharray="3 3"/>
+          <line x1="280" y1="270" x2="318" y2="219.3" stroke="#a77f0c" stroke-dasharray="3 3"/>
+          <line x1="280" y1="270" x2="153.1" y2="270" stroke="#cf4a26" stroke-dasharray="3 3"/>
+          <line x1="280" y1="270" x2="406.9" y2="270" stroke="#cf4a26" stroke-dasharray="3 3"/>
+          <circle cx="280" cy="238" r="5" fill="#a77f0c"/><text x="288" y="246" fill="#a77f0c" font-size="12">내합</text>
+          <circle cx="280" cy="142" r="5" fill="#a77f0c"/><text x="288" y="138" fill="#a77f0c" font-size="12">외합</text>
+          <circle cx="242" cy="219.3" r="5" fill="#a77f0c"/><text x="172" y="214" fill="#a77f0c" font-size="12">동방 최대 이각</text>
+          <circle cx="318" cy="219.3" r="5" fill="#a77f0c"/><text x="326" y="214" fill="#a77f0c" font-size="12">서방 최대 이각</text>
+          <circle cx="280" cy="340" r="6" fill="#cf4a26"/><text x="290" y="356" fill="#b33d1d" font-size="12">충</text>
+          <circle cx="280" cy="40" r="6" fill="#cf4a26"/><text x="290" y="36" fill="#b33d1d" font-size="12">합</text>
+          <circle cx="153.1" cy="270" r="6" fill="#cf4a26"/><text x="108" y="292" fill="#b33d1d" font-size="12">동구</text>
+          <circle cx="406.9" cy="270" r="6" fill="#cf4a26"/><text x="414" y="292" fill="#b33d1d" font-size="12">서구</text>
+          <text x="10" y="390" fill="#6b6e7a" font-size="12">황도 북극에서 본 모습 (공전: 시계 반대 방향). 지구에서 태양을 바라볼 때 왼쪽이 동쪽.</text>
         </svg>
         <figcaption>그림 2. 내행성(안쪽 원)과 외행성(바깥 원)의 위치 관계 (크기는 실제 비율이 아님)</figcaption>
       </figure>
@@ -311,7 +313,7 @@
       </table>
       <div class="callout basic"><span class="ttl">순서 외우기</span>내행성: 내합 → 서방 최대 이각 → 외합 → 동방 최대 이각 → 내합<br>외행성: 충 → 동구 → 합 → 서구 → 충</div>
       <p>천체가 태양의 <b>동쪽</b>에 있으면(이각 동) 태양보다 늦게 뜨고 늦게 져서 <b>초저녁</b>에, <b>서쪽</b>에 있으면 <b>새벽</b>에 보인다. 남중 시각은 대략 12시 + (태양과의 황경 차)/15° 시간이다.</p>
-      <a class="labs-link" href="planets.html?planet=venus">🔬 실험: 금성의 위치 관계와 위상</a>
+      <a class="labs-link" href="planets.html?planet=venus">실험: 금성의 위치 관계와 위상</a>
 
       <h3 id="s4-3">3. 회합 주기</h3>
       <p>회합 주기 S는 행성이 같은 위치 관계로 돌아오는 시간이다. 지구(주기 E)와 행성(주기 P)의 각속도 차이로 360°를 따라잡는 시간이므로</p>
@@ -338,7 +340,7 @@
         <li><b>면적 속도 일정</b>: 같은 시간 동안 쓸고 가는 넓이가 같다 (각운동량 보존) → $v_q/v_Q = Q/q = (1+e)/(1-e)$</li>
         <li><b>조화 법칙</b>: $P^2 = a^3$ (P: 년, a: AU) · 뉴턴의 일반형 $P^2 = \dfrac{4\pi^2 a^3}{G(M+m)}$</li>
       </ol>
-      <a class="labs-link" href="kepler.html">🔬 실험: 케플러 법칙</a>
+      <a class="labs-link" href="kepler.html">실험: 케플러 법칙</a>
 
       <h3 id="s4-6">6. 행성 운동의 정량적 분석 <span class="level adv">심화</span></h3>
       <h4>(1) 행성까지의 거리 — 코페르니쿠스의 방법</h4>
@@ -374,12 +376,12 @@
         <tr><td>그믐달</td><td>약 26</td><td>약 45°(서)</td><td>3시</td><td>9시</td><td>15시</td><td>새벽 동쪽 하늘, 왼쪽이 가늘게 밝음</td></tr>
       </table>
       <p>달은 별을 기준으로 하루 약 13.2°, 태양은 약 1° 동쪽으로 움직이므로 달은 태양보다 하루 약 12.2°씩 뒤처진다. 1° ≈ 4분이므로 <b>달은 매일 약 50분씩 늦게 뜨고 남중한다</b> (남중 간격 = 24h × S/(S − 1) ≈ 24h 50m).</p>
-      <a class="labs-link" href="moon.html">🔬 실험: 위상과 뜨는 시각</a><a class="labs-link" href="celestial.html?step=16">🔬 실험: 3D 하늘에서 달의 이동</a>
+      <a class="labs-link" href="moon.html">실험: 위상과 뜨는 시각</a><a class="labs-link" href="celestial.html?step=16">실험: 3D 하늘에서 달의 이동</a>
 
       <h3 id="s7-2">2. 항성월과 삭망월</h3>
       $$\frac{1}{S} = \frac{1}{P_\text{☾}} - \frac{1}{E} \qquad \frac{1}{29.53} = \frac{1}{27.32} - \frac{1}{365.26}$$
       <p><b>항성월</b>(27.32일)은 별을 기준으로 달이 한 바퀴 도는 시간, <b>삭망월</b>(29.53일)은 위상이 한 번 되풀이되는 시간이다. 항성월 동안 지구가 약 27° 공전해 태양의 방향이 바뀌므로 달이 그만큼 더 돌아야 다시 삭이 된다. 달은 자전 주기와 공전 주기(항성월)가 같아 늘 같은 면을 지구로 향한다(동주기 자전).</p>
-      <a class="labs-link" href="moon.html?view=month">🔬 실험: 항성월과 삭망월</a>
+      <a class="labs-link" href="moon.html?view=month">실험: 항성월과 삭망월</a>
 
       <h3 id="s7-3">3. 백도와 일식·월식</h3>
       <ul>
@@ -389,7 +391,7 @@
         <li><b>월식</b>(망): 개기월식(달 전체가 본그림자 안 — 붉게 보임), 부분월식, 반영월식(반그림자에만 들어감). 달이 떠 있는 곳이면 어디서나 같은 모습이다.</li>
       </ul>
       <div class="callout basic"><span class="ttl">핵심</span>일식은 삭에, 월식은 망에 일어난다. 하지만 백도가 황도와 기울어져 있어 매달 일어나지는 않는다.</div>
-      <a class="labs-link" href="moon.html?view=eclipse">🔬 실험: 백도와 일식·월식 (앞으로의 식 목록)</a>
+      <a class="labs-link" href="moon.html?view=eclipse">실험: 백도와 일식·월식 (앞으로의 식 목록)</a>
 
       <h3 id="s7-4">4. 달 운동의 정량적 분석 <span class="level adv">심화</span></h3>
       <h4>(1) 여러 가지 ‘달’과 식년</h4>
@@ -448,7 +450,7 @@
         <tr><td>겨울</td><td>오리온자리(5h ~ 6h), 큰개자리 시리우스(6h 45m), 작은개자리 프로키온(7h 39m), 황소자리 알데바란(4h 36m) — ‘겨울의 대삼각형’</td></tr>
       </table>
       <p>서울에서 저녁 9시(KST)에 남중하는 적경은 3월 초 약 7h, 6월 초 약 13h, 9월 초 약 19h, 12월 초 약 1h → <b>석 달마다 약 6h</b>씩 커진다.</p>
-      <a class="labs-link" href="celestial.html?step=15">🔬 실험: 밤하늘에 천구 그리기</a><a class="labs-link" href="training.html?mode=find">🎯 훈련: 하늘에서 좌표 찾기</a>
+      <a class="labs-link" href="celestial.html?step=15">실험: 밤하늘에 천구 그리기</a><a class="labs-link" href="training.html?mode=find">훈련: 하늘에서 좌표 찾기</a>
 
       <!-- =============================================================== 부록 -->
       <h2 id="s6">부록</h2>

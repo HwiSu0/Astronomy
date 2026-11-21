@@ -5,23 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>달의 운동 실험실 · Astronomy Lab</title>
   <meta name="description" content="달의 위상 변화와 뜨고 지는 시각, 항성월과 삭망월, 백도와 교점, 일식과 월식을 실제 날짜로 시뮬레이션합니다.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <style>
     .phase-card { display: flex; gap: 14px; align-items: center; }
-    .phase-card canvas { width: 116px !important; height: 116px !important; flex: none; }
-    .ecl-list { list-style: none; padding: 0; margin: 6px 0; font-size: 13.5px; }
-    .ecl-list li { padding: 8px 6px; border-bottom: 1px dashed var(--line); cursor: pointer; }
+    .phase-card canvas { width: 116px !important; height: 116px !important; flex: none; border-radius: 6px; }
+    .ecl-list { list-style: none; padding: 0; margin: 6px 0; font-size: 13.5px; border-top: 1px solid var(--line); }
+    .ecl-list li { padding: 8px 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
     .ecl-list li:hover { background: var(--panel2); }
-    .ecl-list .ty { font-weight: 700; }
-    .ecl-list .solar .ty { color: #ffd76e; } .ecl-list .lunar .ty { color: #ff9a8a; }
-    .ecl-list .vis { float: right; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--bg2); border: 1px solid var(--line); }
-    .ecl-list .vis.on { color: var(--good); border-color: #2f7a4b; }
+    .ecl-list .ty { font-weight: 600; }
+    .ecl-list .solar .ty { color: #9a6200; } .ecl-list .lunar .ty { color: #b8322f; }
+    .ecl-list .vis { float: right; font-size: 12px; padding: 0 7px; border-radius: 3px; background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
+    .ecl-list .vis.on { color: var(--good); background: #eaf5ee; border-color: #bfe0cb; }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.4" transform="rotate(-23.4 12 12)" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/></svg><span>Astronomy Lab</span></a>
     <nav class="nav">
       <a href="celestial.html">천구·좌표계</a>
       <a href="planets.html">행성의 운동</a>
@@ -38,9 +40,9 @@
         <canvas id="cMain"></canvas>
         <div class="overlay-tl">
           <div class="seg" id="viewSeg">
-            <button data-view="phase" class="on">🌓 위상과 뜨는 시각</button>
-            <button data-view="month">🔄 항성월·삭망월</button>
-            <button data-view="eclipse">🌑 백도와 일식·월식</button>
+            <button data-view="phase" class="on">위상과 뜨는 시각</button>
+            <button data-view="month">항성월·삭망월</button>
+            <button data-view="eclipse">백도와 일식·월식</button>
           </div>
         </div>
         <div class="stage-bottom">
@@ -80,7 +82,7 @@
         <div class="box readout" id="riseInfo"></div>
         <h4>다가오는 위상 (클릭하면 이동)</h4>
         <ul class="events" id="phaseList"></ul>
-        <div class="quick"><a class="btn small" id="lnk3d" href="celestial.html?step=16">🌐 3D 하늘에서 이 시각의 달 보기</a></div>
+        <div class="quick"><a class="btn small" id="lnk3d" href="celestial.html?step=16">3D 하늘에서 이 시각의 달 보기</a></div>
       </div>
 
       <div class="tab" id="tab-ecl">
@@ -116,7 +118,7 @@
           <li><b>일식</b>: 삭일 때, 달 그림자가 지구에 떨어짐 — 개기·금환·부분. 달이 지구에 가까우면(시직경이 크면) 개기, 멀면 금환</li>
           <li><b>월식</b>: 망일 때, 달이 지구 그림자 속으로 — 개기·부분·반영. 밤인 지역 어디서나 같은 모습으로 보인다</li>
         </ul>
-        <details class="deep"><summary>🔭 심화: 여러 가지 ‘달(month)’과 사로스</summary>
+        <details class="deep"><summary>심화: 여러 가지 ‘달(month)’과 사로스</summary>
           <table class="mini">
             <tr><th>주기</th><th>기준</th><th>길이(일)</th></tr>
             <tr><td>항성월</td><td>별</td><td>27.32166</td></tr>
@@ -127,13 +129,13 @@
           </table>
           교점은 황도를 따라 <b>서쪽으로</b> 18.6년에 한 바퀴 역행하므로, 태양이 같은 교점으로 돌아오는 <b>식년</b>은 1년보다 짧다: 1/식년 = 1/365.25 + 1/6793.5 → <b>346.62일</b>.<br>
           <b>사로스 주기</b>: 223 삭망월 = 6585.32일 ≈ 242 교점월(6585.36일) ≈ 239 근점월(6585.54일) ≈ 18년 11일 8시간. 같은 조건이 되풀이되어 비슷한 식이 다시 일어난다(8시간 때문에 지구에서 보이는 지역은 경도 약 120° 서쪽으로 이동).</details>
-        <details class="deep"><summary>🔭 심화: 식의 한계와 시차</summary>
+        <details class="deep"><summary>심화: 식의 한계와 시차</summary>
           지구 중심에서 본 태양과 달 중심 사이의 각거리를 σ라 하면<br>
           · 일식이 지구 어딘가에서 보일 조건: <span class="formula">σ &lt; π☾ − π☉ + s☾ + s☉</span> (약 1.4°~1.6°)<br>
           · 월식(본영식) 조건: 달과 지구 본그림자 중심의 각거리 <span class="formula">σ′ &lt; 1.02(π☾ + π☉ − s☉) + s☾</span><br>
           (π: 지평 시차, s: 시반경) 이를 황위로 바꾸면 삭에서 |β| ≲ 1.5°, 망에서 |β| ≲ 1.0°. 태양이 교점에서 약 ±15~18° 안에 있을 때 일식, ±9~12° 안에 있을 때 월식이 가능하다(<b>식의 한계</b>).<br>
           <b>달의 지평 시차</b> π☾ = arcsin(R⊕/d) ≈ 57′ 이므로, 관측자 위치에 따라 달의 겉보기 위치가 최대 약 1° 달라진다(이 실험실의 월출 시각과 서울 일식 계산은 이를 반영한다).</details>
-        <details class="deep"><summary>🔭 심화: 계절에 따른 보름달의 높이</summary>
+        <details class="deep"><summary>심화: 계절에 따른 보름달의 높이</summary>
           보름달은 태양의 반대편에 있으므로 겨울(태양의 적위 −23°)에는 적위가 약 +23°가 되어 높이 뜨고(서울 남중 고도 약 75°), 여름에는 낮게 뜬다(약 29°). 실제로는 백도의 경사 ±5.1° 때문에 18.6년 주기로 ±5° 더 변한다.</details>
       </div>
     </aside>

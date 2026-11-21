@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>케플러 법칙 실험실 · Astronomy Lab</title>
   <meta name="description" content="타원 궤도, 면적 속도 일정, 조화 법칙, 케플러 방정식과 활력 방정식을 시각화합니다.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.4" transform="rotate(-23.4 12 12)" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/></svg><span>Astronomy Lab</span></a>
     <nav class="nav">
       <a href="celestial.html">천구·좌표계</a>
       <a href="planets.html">행성의 운동</a>
@@ -79,12 +81,12 @@
           <tr><td>원일점 거리 Q</td><td>a(1 + e)</td></tr>
         </table>
         <div class="key">면적 속도 일정 ⇔ 각운동량 보존: r·v⊥ = 일정 → v<sub>근</sub>/v<sub>원</sub> = Q/q = (1 + e)/(1 − e)</div>
-        <details class="deep" open><summary>🔭 심화: 뉴턴의 일반화와 활력 방정식</summary>
+        <details class="deep" open><summary>심화: 뉴턴의 일반화와 활력 방정식</summary>
           <p>만유인력으로 유도하면 <span class="formula">P² = 4π²a³ / G(M + m)</span>. 태양계(년, AU, 태양 질량 단위)에서는 P² = a³/(M + m).</p>
           <p>역학적 에너지 보존: <span class="formula">v²/2 − GM/r = −GM/2a</span> → <b>활력 방정식</b> <span class="formula">v² = GM(2/r − 1/a)</span></p>
           <p>원 궤도 속력 v<sub>c</sub> = √(GM/r), 탈출 속력 v<sub>esc</sub> = √(2GM/r) = √2·v<sub>c</sub>. 지구의 평균 공전 속력 ≈ 29.78 km/s.</p>
         </details>
-        <details class="deep"><summary>🔭 심화: 케플러 방정식</summary>
+        <details class="deep"><summary>심화: 케플러 방정식</summary>
           <p>근일점 통과 후 시간 t에서 위치를 구하는 방법:</p>
           <ol>
             <li>평균 근점 이각 <span class="formula">M = 2π(t − τ)/P</span> (균일하게 증가)</li>
@@ -93,7 +95,7 @@
           </ol>
           <p>E는 타원의 중심에서 본 ‘보조원’ 위의 각이다. ‘근점 이각’ 표시를 켜고 확인해 보자. 면적 속도 일정 법칙에서 출발하면 (보조원에서의 넓이를 b/a 배로 줄이는 관계를 이용해) 케플러 방정식을 유도할 수 있다.</p>
         </details>
-        <details class="deep"><summary>🔭 심화: 궤도의 6요소</summary>
+        <details class="deep"><summary>심화: 궤도의 6요소</summary>
           긴반지름 a, 이심률 e, 궤도 경사 i, 승교점 경도 Ω, 근일점 인수 ω, 근일점 통과 시각 τ(또는 특정 시각의 평균 근점 이각). 앞의 둘은 모양, 다음 셋은 공간에서의 방향, 마지막은 위치를 정한다. ‘행성의 운동’ 실험실의 실제 궤도는 JPL이 제공하는 이 요소들로 계산한다.
         </details>
       </div>

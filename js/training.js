@@ -54,7 +54,7 @@ function clock() {
 }
 sky.on('update', clock);
 function scoreFor(err) { return Math.max(0, Math.round(100 - 8 * err)); }
-function grade(avg) { return avg < 1.5 ? '천문 올림피아드급 🏆' : avg < 3 ? '아주 정확함 🌟' : avg < 6 ? '좋음 👍' : avg < 10 ? '조금 더 연습!' : '천구 모형부터 다시 확인해 보자'; }
+function grade(avg) { return avg < 1.5 ? '천문 올림피아드급' : avg < 3 ? '아주 정확함' : avg < 6 ? '좋음' : avg < 10 ? '조금 더 연습!' : '천구 모형부터 다시 확인해 보자'; }
 function nearestBright(ra, dec) {
   let best = null;
   for (const s of STARS) {
@@ -240,7 +240,7 @@ function newProblem() {
     curProb.answered = true;
     const ok = checkAnswer(curProb, v);
     calcStats.n++; if (ok) calcStats.ok++;
-    $('#ansFb').innerHTML = `<div class="feedback ${ok ? 'good' : 'bad'}">${ok ? '정답입니다! 🎉' : `아쉽습니다. 정답은 <b>${fmtAns(curProb)}</b>`}</div>`;
+    $('#ansFb').innerHTML = `<div class="feedback ${ok ? 'good' : 'bad'}">${ok ? '정답입니다.' : `아쉽습니다. 정답은 <b>${fmtAns(curProb)}</b>`}</div>`;
     $('#sol').classList.remove('hidden');
     renderCalcPanel();
   };

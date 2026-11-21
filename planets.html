@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>행성의 운동 실험실 · Astronomy Lab</title>
   <meta name="description" content="내행성과 외행성의 위치 관계, 겉보기 운동(순행·역행·유), 회합 주기, 위상 변화를 시뮬레이션합니다.">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html"><span class="logo">✦</span><span>Astronomy Lab</span></a>
+    <a class="brand" href="index.html"><svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.4" transform="rotate(-23.4 12 12)" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/></svg><span>Astronomy Lab</span></a>
     <nav class="nav">
       <a href="celestial.html">천구·좌표계</a>
       <a href="planets.html" class="on">행성의 운동</a>
@@ -27,8 +29,8 @@
         <canvas id="cMain"></canvas>
         <div class="overlay-tl">
           <div class="seg" id="frameSeg">
-            <button data-frame="helio" class="on">☉ 태양 중심(공전 궤도)</button>
-            <button data-frame="geo">⊕ 지구 중심(겉보기 경로)</button>
+            <button data-frame="helio" class="on">태양 중심 (공전 궤도)</button>
+            <button data-frame="geo">지구 중심 (겉보기 경로)</button>
           </div>
           <div class="seg small" id="modeSeg">
             <button data-mode="real" class="on">실제 궤도 (날짜)</button>
@@ -125,7 +127,7 @@
         <p>행성이 같은 위치 관계(예: 충 → 다음 충)로 돌아오는 데 걸리는 시간 S. 공전 주기 P, 지구의 공전 주기 E(=1년)일 때</p>
         <div class="key formula">내행성: 1/S = 1/P − 1/E &nbsp;&nbsp; 외행성: 1/S = 1/E − 1/P</div>
         <p>각속도의 차이(ω<sub>빠른</sub> − ω<sub>느린</sub>)로 한 바퀴(360°)를 따라잡는 시간이라고 생각하면 바로 유도된다.</p>
-        <details class="deep"><summary>🔭 심화: 역행의 각속도와 기간 (원 궤도)</summary>
+        <details class="deep"><summary>심화: 역행의 각속도와 기간 (원 궤도)</summary>
           충에서 지구와 행성의 공전 속도는 시선에 수직이므로, 상대 속도 v<sub>⊕</sub> − v<sub>P</sub> 를 거리 (a − 1)로 나눈 값이 겉보기 각속도이다.<br>
           <span class="formula">ω<sub>역행</sub> = (v<sub>⊕</sub> − v<sub>P</sub>)/(a − 1) = (2π/E)·(1 − a<sup>−1/2</sup>)/(a − 1)</span> [rad/일, a는 AU]<br>
           화성(a = 1.524)이면 약 0.36°/일, 목성(5.20)이면 약 0.13°/일.<br>
@@ -134,10 +136,10 @@
           <div class="key formula">cos θ<sub>유</sub> = √a / (a − √a + 1)</div>
           역행 기간 ≈ 2θ<sub>유</sub>·S/360°. 화성: θ<sub>유</sub> ≈ 16.8°, S = 780일 → 약 73일. 금성: θ<sub>유</sub> ≈ 13.0°, S = 584일 → 약 42일.
           (실제 궤도는 타원이라 해마다 조금씩 다르다. ‘다가오는 현상’ 목록에서 실제 유의 날짜를 확인해 보자.)</details>
-        <details class="deep"><summary>🔭 심화: 내행성의 궤도 반지름 구하기 (코페르니쿠스)</summary>
+        <details class="deep"><summary>심화: 내행성의 궤도 반지름 구하기 (코페르니쿠스)</summary>
           최대 이각 E<sub>max</sub>일 때 ∠태양–행성–지구 = 90° 이므로 <span class="formula">a = sin E<sub>max</sub></span> (AU). 금성의 최대 이각 46.3°이면 a ≈ 0.72 AU.<br>
           외행성은 충에서 구까지 걸린 시간 t로 상대 각 θ = 360°·t/S 를 구하고 <span class="formula">a = 1/cos θ</span> 로 구한다.</details>
-        <details class="deep"><summary>🔭 심화: 금성의 위상과 밝기</summary>
+        <details class="deep"><summary>심화: 금성의 위상과 밝기</summary>
           금성은 내합 근처에서 가장 크게(약 60″) 보이지만 가늘다. 밝기 ∝ (조명된 면적)/(거리²) 이므로 최대 밝기는 내합과 최대 이각 사이, 이각 약 39°(내합 전후 약 36일)일 때 나타난다(등급 약 −4.6).<br>
           갈릴레이가 관측한 금성의 <b>보름달 모양 위상</b>과 <b>크기 변화</b>는 금성이 태양 둘레를 돈다는 증거였다. 프톨레마이오스 체계에서는 금성이 항상 태양보다 가까워 초승달~반달 모양만 보여야 한다.</details>
       </div>

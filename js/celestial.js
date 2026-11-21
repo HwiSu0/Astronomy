@@ -46,7 +46,7 @@ const GROUPS = [
   { title: '적도좌표계', color: 'var(--eq)', items: [['equator', '천구의 적도'], ['poles', '천구의 극·자전축'], ['eqGrid', '적경·적위 격자'], ['rotationArrows', '일주 운동 방향']] },
   { title: '황도좌표계', color: 'var(--ecl)', items: [['ecliptic', '황도'], ['eclPoints', '춘·추분점, 하·동지점'], ['eclGrid', '황경·황위 격자']] },
   { title: '은하좌표계', color: 'var(--gal)', items: [['galactic', '은하 적도·중심·극'], ['galGrid', '은경·은위 격자'], ['milkyway', '은하수']] },
-  { title: '천체', color: '#cfd8ff', items: [['stars', '별'], ['starNames', '밝은 별 이름'], ['allStarNames', '모든 별 이름'], ['constellations', '별자리 선'], ['conNames', '별자리 이름'], ['sun', '태양'], ['sunPath', '오늘 태양의 일주권'], ['seasonPaths', '계절별 태양 일주권'], ['moon', '달 (위상 표시)'], ['planets', '행성']] },
+  { title: '천체', color: '#5a5d68', items: [['stars', '별'], ['starNames', '밝은 별 이름'], ['allStarNames', '모든 별 이름'], ['constellations', '별자리 선'], ['conNames', '별자리 이름'], ['sun', '태양'], ['sunPath', '오늘 태양의 일주권'], ['seasonPaths', '계절별 태양 일주권'], ['moon', '달 (위상 표시)'], ['planets', '행성']] },
   { title: '기타', color: 'var(--accent)', items: [['shell', '천구 구면'], ['observer', '관측자'], ['ground', '땅 가리기(관측자 시점)'], ['atmosphere', '낮 하늘 표현(관측자 시점)'], ['precessionCircle', '세차 원'], ['triangle', '천문 삼각형 PZX'], ['trails', '별의 일주 궤적'], ['planetTrails', '행성 이동 경로']] },
 ];
 
@@ -264,7 +264,7 @@ function renderInfo() {
       <tr ${g('var(--eq)')}><td>적경 α</td><td>${A.fmtRA(eq.ra)}</td></tr>
       <tr ${g('var(--eq)')}><td>적위 δ</td><td>${A.fmtDMS(eq.dec)}</td></tr>
       <tr ${g('var(--ha)')}><td>시간각 H = LST − α</td><td>${A.fmtRA(H)} <span class="note">(${H.toFixed(2)}°)</span></td></tr>
-      <tr ${g('#7a86b8')}><td>J2000.0 α, δ</td><td>${A.fmtRA(j2000.ra, false)}, ${A.fmtDMS(j2000.dec, true, false)}</td></tr>
+      <tr ${g('#8a8c95')}><td>J2000.0 α, δ</td><td>${A.fmtRA(j2000.ra, false)}, ${A.fmtDMS(j2000.dec, true, false)}</td></tr>
       <tr ${g('var(--ecl)')}><td>황경 λ, 황위 β</td><td>${ecl.lon.toFixed(2)}°, ${ecl.lat >= 0 ? '+' : ''}${ecl.lat.toFixed(2)}°</td></tr>
       <tr ${g('var(--gal)')}><td>은경 l, 은위 b</td><td>${gal.l.toFixed(2)}°, ${gal.b >= 0 ? '+' : ''}${gal.b.toFixed(2)}°</td></tr>
     </table>
@@ -309,7 +309,7 @@ const STEPS = [
         <li><b>지평선</b>: 관측자가 선 지평면을 넓혀 천구와 만나는 <b>대원</b>. 천정에서 정확히 90° 떨어져 있다.</li>
         <li><b>대원</b>: 천구의 중심을 지나는 평면이 천구와 만나서 생기는 원 (지평선, 천구의 적도, 자오선, 황도 등)</li>
       </ul>
-      <p class="try">👉 마우스로 끌어 천구를 돌려 보고(휠: 확대), 왼쪽 위 <b>🔭 관측자 시점</b>을 눌러 실제로 하늘을 올려다본 모습과 비교해 보자.</p>`,
+      <p class="try">마우스로 끌어 천구를 돌려 보고(휠: 확대), 왼쪽 위 <b>관측자 시점</b>을 눌러 실제로 하늘을 올려다본 모습과 비교해 보자.</p>`,
   },
   {
     title: '천구의 극과 위도', level: 'basic',
@@ -319,8 +319,8 @@ const STEPS = [
       <div class="key">천구 북극의 고도 h<sub>P</sub> = 관측자의 위도 φ</div>
       <p>천구 북극에서 약 0.7° 떨어진 곳에 <b>북극성</b>이 있으므로, 북반구에서는 <b>북극성의 고도 ≈ 그 지방의 위도</b>이다.</p>
       <div class="quick"><button class="btn small" data-setlat="90">북극 90°</button><button class="btn small" data-setlat="66.56">66.6°N</button><button class="btn small" data-setlat="37.57">서울</button><button class="btn small" data-setlat="0">적도</button><button class="btn small" data-setlat="-33.87">시드니</button></div>
-      <p class="try">👉 위 버튼(또는 ‘관측 설정’의 위도 슬라이더)으로 위도를 바꾸며 천구 북극의 고도(초록 호)를 확인하자. 북극에서는 천정에, 적도에서는 북점에 온다. 남반구에서는 천구 북극이 지평선 아래로 내려간다.</p>
-      <details class="deep"><summary>🔭 심화: 왜 h<sub>P</sub> = φ 일까?</summary>
+      <p class="try">위 버튼(또는 ‘관측 설정’의 위도 슬라이더)으로 위도를 바꾸며 천구 북극의 고도(초록 호)를 확인하자. 북극에서는 천정에, 적도에서는 북점에 온다. 남반구에서는 천구 북극이 지평선 아래로 내려간다.</p>
+      <details class="deep"><summary>심화: 왜 h<sub>P</sub> = φ 일까?</summary>
         위도 φ는 지구 중심에서 본 관측자 위치(=천정 방향)가 적도면과 이루는 각이다. 천구 북극 방향은 적도면에 수직이므로 천정과 천구 북극 사이의 각(천정 거리)은 90° − φ, 따라서 천구 북극의 고도는 90° − (90° − φ) = φ.<br>
         이 논리는 별이 무한히 멀어서 지구 중심과 관측자에서 본 방향이 같다고 볼 수 있을 때(시차 무시) 성립한다. 북극성은 천구 북극에서 약 0.66°(2026년 기준) 떨어져 있으므로 실제로는 하루 동안 고도가 φ ± 0.66° 범위에서 변한다.</details>`,
   },
@@ -335,7 +335,7 @@ const STEPS = [
       </ul>
       <p>천체가 자오선을 지나는 순간을 <b>정중</b>이라 한다. 천구 북극보다 남쪽(위쪽)에서 지날 때를 <b>남중(상방 정중)</b>이라 하며, 이때 하루 중 고도가 가장 높다.</p>
       <div class="key">남중 고도 = 90° − |φ − δ| &nbsp;(천구의 적도의 남중 고도 = 90° − φ)</div>
-      <p class="try">👉 ‘관측자 시점’으로 바꾸고 <b>남</b> 버튼을 누르면 자오선이 남점에서 천정으로 곧게 올라가는 선으로 보인다.</p>`,
+      <p class="try">‘관측자 시점’으로 바꾸고 <b>남</b> 버튼을 누르면 자오선이 남점에서 천정으로 곧게 올라가는 선으로 보인다.</p>`,
   },
   {
     title: '지평좌표계: 고도와 방위각', level: 'basic',
@@ -348,7 +348,7 @@ const STEPS = [
       </ul>
       <table class="mini"><tr><th>방위</th><th>북</th><th>동</th><th>남</th><th>서</th></tr><tr><td>방위각</td><td>0°</td><td>90°</td><td>180°</td><td>270°</td></tr></table>
       <div class="key">장점: 관측자가 바로 쓰기 쉽다 · 단점: 같은 천체라도 관측 장소와 시각에 따라 값이 계속 변한다</div>
-      <p class="try">👉 하단 ▶ 버튼으로 시간을 흐르게 하면 초록색 호(h, A)가 계속 변한다. ‘천체 정보’ 탭의 숫자도 함께 보자.</p>
+      <p class="try">하단 ▶ 버튼으로 시간을 흐르게 하면 초록색 호(h, A)가 계속 변한다. ‘천체 정보’ 탭의 숫자도 함께 보자.</p>
       <p class="note">※ 남점을 기준으로 서쪽으로 재는 방식을 쓰는 책도 있다. 문제에서 방위각의 정의를 꼭 확인하자.</p>`,
   },
   {
@@ -363,8 +363,8 @@ const STEPS = [
         <li><b>적위(δ)</b>: 천구의 적도에서 시간권을 따라 천체까지 잰 각. 북쪽 +, 남쪽 − (−90° ~ +90°)</li>
       </ul>
       <div class="key">적경·적위는 천구에 고정 → 관측 장소·시각이 달라도 (거의) 변하지 않는다</div>
-      <p class="try">👉 ▶ 재생: 빨간 격자가 별과 함께 돌아가므로 별의 α, δ는 그대로다. 지평좌표(h, A)와 비교해 보자.</p>
-      <details class="deep"><summary>🔭 심화: ‘거의’ 변하지 않는 이유</summary>
+      <p class="try">▶ 재생: 빨간 격자가 별과 함께 돌아가므로 별의 α, δ는 그대로다. 지평좌표(h, A)와 비교해 보자.</p>
+      <details class="deep"><summary>심화: ‘거의’ 변하지 않는 이유</summary>
         춘분점 자체가 세차 운동으로 매년 약 50.3″씩 황도를 따라 서쪽으로 이동하므로 별의 적경·적위는 천천히 변한다. 그래서 성표에는 <b>기준 분점(epoch)</b>을 함께 적는다(예: J2000.0). 이 밖에 고유 운동, 장동, 광행차, 연주 시차도 아주 작은 변화를 만든다.</details>`,
   },
   {
@@ -378,8 +378,8 @@ const STEPS = [
       </ul>
       <div class="key">H = LST − α &nbsp;·&nbsp; 남중할 때 H = 0 이므로 LST = α</div>
       <p>즉 <b>지금 자오선을 지나는 별의 적경 = 지금의 항성시</b>다. 항성시는 별을 기준으로 한 시계라서 별이 다시 남중하는 주기인 <b>항성일(23h 56m 4s)</b>마다 0h부터 다시 시작한다.</p>
-      <p class="try">👉 ▶ 재생하면 주황색 시간각 호가 늘어난다. 별이 자오선(흰 선)에 올 때 하단의 항성시와 별의 적경이 같아지는지 확인하자.</p>
-      <details class="deep"><summary>🔭 심화: 항성시 계산</summary>
+      <p class="try">▶ 재생하면 주황색 시간각 호가 늘어난다. 별이 자오선(흰 선)에 올 때 하단의 항성시와 별의 적경이 같아지는지 확인하자.</p>
+      <details class="deep"><summary>심화: 항성시 계산</summary>
         그리니치 평균 항성시 GMST(°) = 280.46061837 + 360.98564736629·d (d = J2000.0으로부터의 날수, 고차항 생략). 지방 항성시 LST = GMST + λ(동경 +).<br>
         ‘관측 설정’ 탭의 JD와 GMST로 직접 계산해서 확인해 보자.</details>`,
   },
@@ -396,7 +396,7 @@ const STEPS = [
         <li><b>서쪽 하늘</b>: 오른쪽 아래로 비스듬히 짐</li>
       </ul>
       <div class="key">일주권과 지평선이 이루는 각 = 90° − φ</div>
-      <p class="try">👉 왼쪽 위 <b>북·동·남·서</b> 버튼으로 방향을 바꿔 가며 궤적을 비교하자. 화면을 끌어 둘러볼 수 있고, 휠로 시야를 넓힐 수 있다.</p>`,
+      <p class="try">왼쪽 위 <b>북·동·남·서</b> 버튼으로 방향을 바꿔 가며 궤적을 비교하자. 화면을 끌어 둘러볼 수 있고, 휠로 시야를 넓힐 수 있다.</p>`,
   },
   {
     title: '위도에 따른 일주 운동', level: 'basic',
@@ -410,7 +410,7 @@ const STEPS = [
       <div class="quick"><button class="btn small" data-setlat="90">북극 90°</button><button class="btn small" data-setlat="66.56">66.6°N</button><button class="btn small" data-setlat="37.57">서울 37.6°N</button><button class="btn small" data-setlat="0">적도 0°</button><button class="btn small" data-setlat="-33.87">시드니 33.9°S</button><button class="btn small" data-setlat="-90">남극</button></div>
       <table class="mini"><tr><th></th><th>북반구 (φ &gt; 0)</th></tr>
         <tr><td>주극성</td><td>δ ≥ 90° − φ</td></tr><tr><td>출몰성</td><td>−(90° − φ) &lt; δ &lt; 90° − φ</td></tr><tr><td>전몰성</td><td>δ ≤ −(90° − φ)</td></tr></table>
-      <p class="try">👉 위도 버튼을 누르면 궤적이 새로 그려진다. 남반구에서는 별이 천구 남극을 중심으로 <b>시계 방향</b>으로 도는 것도 확인하자.</p>`,
+      <p class="try">위도 버튼을 누르면 궤적이 새로 그려진다. 남반구에서는 별이 천구 남극을 중심으로 <b>시계 방향</b>으로 도는 것도 확인하자.</p>`,
   },
   {
     title: '태양의 연주 운동과 황도', level: 'basic',
@@ -424,7 +424,7 @@ const STEPS = [
         <tr><td>동지점</td><td>12월 22일</td><td>18h</td><td>−23.4°</td></tr></table>
       <p>태양의 적위가 계절마다 바뀌므로 <b>남중 고도, 낮의 길이, 뜨고 지는 방위</b>가 달라진다(색 원: 계절별 태양의 일주권).</p>
       <div class="key">태양의 남중 고도 = 90° − φ + δ☉ (북반구, δ☉ &lt; φ)</div>
-      <p class="try">👉 ‘매일 같은 시각’ 속도로 재생 중이다. 태양(노란 빛)이 황도를 따라 동쪽으로 이동하고, 태양의 일주권(주황 원)이 하지와 동지 사이를 오르내리는 것을 보자.</p>`,
+      <p class="try">‘매일 같은 시각’ 속도로 재생 중이다. 태양(노란 빛)이 황도를 따라 동쪽으로 이동하고, 태양의 일주권(주황 원)이 하지와 동지 사이를 오르내리는 것을 보자.</p>`,
   },
   {
     title: '별의 연주 운동과 항성일', level: 'basic',
@@ -437,7 +437,7 @@ const STEPS = [
       </ul>
       <div class="key">같은 별은 매일 약 4분(3분 56초)씩 일찍 남중한다</div>
       <div class="quick"><button class="btn small" data-speed="daily:1">같은 시각 · 1일/초</button><button class="btn small" data-speed="sidereal:2">항성일 간격 · 2일/초</button></div>
-      <p class="try">👉 ‘항성일 간격’으로 바꾸면 별은 제자리에 멈춰 있고 태양만 황도를 따라 움직인다. 왜 그런지 설명해 보자.</p>`,
+      <p class="try">‘항성일 간격’으로 바꾸면 별은 제자리에 멈춰 있고 태양만 황도를 따라 움직인다. 왜 그런지 설명해 보자.</p>`,
   },
   {
     title: '황도좌표계', level: 'basic',
@@ -449,7 +449,7 @@ const STEPS = [
         <li><b>황도 북극</b>: 천구 북극에서 23.4° 떨어진 용자리에 있다(적경 18h, 적위 +66.6°).</li>
       </ul>
       <p>태양의 황위는 항상 0°이고, 행성과 달은 궤도면이 황도면과 거의 같아서 황도 근처(|β|가 작음)에서 움직인다. 그래서 황도좌표계는 태양계 천체를 다룰 때 편리하다.</p>
-      <details class="deep"><summary>🔭 심화: 적도 ↔ 황도 변환</summary>
+      <details class="deep"><summary>심화: 적도 ↔ 황도 변환</summary>
         x축(춘분점 방향)을 축으로 ε만큼 회전한 관계이다.<br>
         <span class="formula">sin β = sin δ cos ε − cos δ sin ε sin α</span><br>
         <span class="formula">cos β cos λ = cos δ cos α</span><br>
@@ -468,7 +468,7 @@ const STEPS = [
       </ul>
       <div class="key">은하면은 천구의 적도와 약 62.9° 기울어져 있다</div>
       <p>별, 성단, 성운의 우리은하 안에서의 분포를 연구할 때 쓴다. 예를 들어 산개 성단은 |b|가 작은 곳에, 구상 성단은 은하 중심 방향 하늘에 넓게 퍼져 있다.</p>
-      <details class="deep"><summary>🔭 심화: 회전 행렬로 변환</summary>
+      <details class="deep"><summary>심화: 회전 행렬로 변환</summary>
         은하 좌표는 J2000 적도 좌표 벡터에 고정된 회전 행렬을 곱해서 얻는다. 은하 북극 (α<sub>G</sub>, δ<sub>G</sub>) = (192.859°, +27.128°), 천구 북극의 은경 l<sub>NCP</sub> = 122.932°일 때<br>
         <span class="formula">sin b = sin δ sin δ<sub>G</sub> + cos δ cos δ<sub>G</sub> cos(α − α<sub>G</sub>)</span><br>
         <span class="formula">cos b sin(l<sub>NCP</sub> − l) = cos δ sin(α − α<sub>G</sub>)</span></details>`,
@@ -485,8 +485,8 @@ const STEPS = [
       <p>구면 코사인 법칙을 변 ZX에 적용하면</p>
       <div class="key formula">sin h = sin φ sin δ + cos φ cos δ cos H</div>
       <p>변 PX에 적용하면 <span class="formula">sin δ = sin φ sin h + cos φ cos h cos A</span>, 사인 법칙은 <span class="formula">sin H / sin z = sin A / cos δ</span>.</p>
-      <p class="try">👉 ‘천체 정보’ 탭에서 좌변과 우변이 실제로 같은지 확인하고, 시간을 흐르게 하며 삼각형의 모양 변화를 관찰하자.</p>
-      <details class="deep"><summary>🔭 응용</summary>
+      <p class="try">‘천체 정보’ 탭에서 좌변과 우변이 실제로 같은지 확인하고, 시간을 흐르게 하며 삼각형의 모양 변화를 관찰하자.</p>
+      <details class="deep"><summary>응용</summary>
         <b>출몰</b>(h = 0): cos H₀ = −tan φ tan δ, cos A = sin δ / cos φ<br>
         <b>남중</b>(H = 0): h = 90° − |φ − δ|<br>
         <b>묘유선 통과</b>(A = 90°, 270°): sin h = sin δ / sin φ, cos H = tan δ / tan φ (0 &lt; δ &lt; φ 일 때만 지평선 위에서 지난다 — δ &gt; φ 인 별은 왜 묘유선을 지나지 않을까?)<br>
@@ -504,7 +504,7 @@ const STEPS = [
       </ul>
       <div class="field"><label>기준 연도 <output id="gEpochOut">2000년</output></label><input type="range" id="gEpoch" min="-13000" max="15000" step="50" value="2000"></div>
       <div class="quick"><button class="btn small" data-epoch="-2800">기원전 2800년</button><button class="btn small" data-epoch="2000">2000년</button><button class="btn small" data-epoch="7500">7500년</button><button class="btn small" data-epoch="14000">14000년</button></div>
-      <p class="try">👉 슬라이더를 움직이면 천구 북극(빨간 점)과 춘분점이 별 사이를 이동한다. 폴라리스의 적경·적위가 크게 바뀌는 것을 ‘천체 정보’ 탭에서 확인하자.</p>
+      <p class="try">슬라이더를 움직이면 천구 북극(빨간 점)과 춘분점이 별 사이를 이동한다. 폴라리스의 적경·적위가 크게 바뀌는 것을 ‘천체 정보’ 탭에서 확인하자.</p>
       <p class="note">※ 이 시뮬레이션은 황도가 고정되고 황도 경사가 23.44°로 일정하다고 보는 근사 모형이다. 실제로는 행성 세차와 황도 경사 변화(약 22.1°~24.5°, 주기 약 41,000년)도 있다.</p>`,
   },
   {
@@ -521,7 +521,7 @@ const STEPS = [
         <li><b>적경 읽기</b>: 자오선에서 동쪽으로 갈수록 적경이 커진다(1h = 15°). 적위는 천구의 적도에서 극 쪽으로 잰다.</li>
       </ol>
       <div class="key">손으로 각도 재기 (팔을 쭉 폈을 때): 새끼손가락 폭 ≈ 1°, 주먹 ≈ 10°, 엄지~새끼손가락 활짝 ≈ 20~25°</div>
-      <p class="try">👉 지금 서울의 하늘이다(낮이라면 오늘 밤 9시). 빈 하늘에 마우스를 올리면 그 지점의 좌표가 나온다. 남쪽 하늘에서 적도와 자오선의 교점을 찾고, 그 근처 별의 적경과 항성시를 비교해 보자. ‘적경·적위 훈련’ 페이지에서 실력을 시험할 수 있다.</p>`,
+      <p class="try">지금 서울의 하늘이다(낮이라면 오늘 밤 9시). 빈 하늘에 마우스를 올리면 그 지점의 좌표가 나온다. 남쪽 하늘에서 적도와 자오선의 교점을 찾고, 그 근처 별의 적경과 항성시를 비교해 보자. ‘적경·적위 훈련’ 페이지에서 실력을 시험할 수 있다.</p>`,
   },
 ];
 
@@ -536,8 +536,8 @@ STEPS.push({
       <li>화면의 달은 실제 위상을 그렸고, 밝은 쪽이 항상 태양을 향한다. (크기는 약 8배 과장)</li>
     </ul>
     <div class="key">항성월 27.32일(별 기준) &lt; 삭망월 29.53일(태양 기준): 1/S = 1/P☾ − 1/E</div>
-    <div class="quick"><button class="btn small" data-act="lookmoon">🔭 관측자 시점으로 달 보기</button><button class="btn small" data-speed="continuous:3600">하루 동안의 움직임 (1시간/초)</button></div>
-    <p class="try">👉 같은 시각에 매일 달을 보면 서쪽 하늘의 초승달이 남쪽의 상현달, 동쪽의 보름달로 바뀐다. <a href="moon.html">달의 운동 실험실</a>에서 위상, 월출 시각, 일식·월식을 더 자세히 다룬다.</p>`,
+    <div class="quick"><button class="btn small" data-act="lookmoon">관측자 시점으로 달 보기</button><button class="btn small" data-speed="continuous:3600">하루 동안의 움직임 (1시간/초)</button></div>
+    <p class="try">같은 시각에 매일 달을 보면 서쪽 하늘의 초승달이 남쪽의 상현달, 동쪽의 보름달로 바뀐다. <a href="moon.html">달의 운동 실험실</a>에서 위상, 월출 시각, 일식·월식을 더 자세히 다룬다.</p>`,
 });
 
 function visibleStarFrom(names) {
@@ -597,7 +597,7 @@ function applyStep(i, rebuildHtml = true) {
       sky.setPlaying(false);
       sky.setView('observer');
       sky.lookAt(h.az, Math.max(12, h.alt), 70);
-      if (h.alt < 0) b.textContent = '🔭 달이 지금 지평선 아래에 있다 (시간을 바꿔 보자)';
+      if (h.alt < 0) b.textContent = '달이 지금 지평선 아래에 있다 (시간을 바꿔 보자)';
     }));
     history.replaceState(null, '', `?step=${stepIdx + 1}`);
   }
