@@ -9,6 +9,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@600;700&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* 첫 화면 천구 그림 (좌표계 색은 style.css 변수) */
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 48px; align-items: center; }
+    .hero-fig { margin: 0; }
+    .hero-fig svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .hero-fig figcaption { margin-top: 6px; font-size: 13.5px; color: var(--muted); text-align: center; }
+    .hero-fig path, .hero-fig line { fill: none; stroke-width: 2; }
+    .hero-fig .sphere { fill: #eaf0f9; stroke: #2f323b; stroke-width: 1.5; }
+    .hero-fig .hor-plane { fill: rgba(29, 138, 80, 0.08); }
+    .hero-fig .hor { stroke: var(--hor); stroke-width: 2.4; }
+    .hero-fig .eq { stroke: var(--eq); }
+    .hero-fig .ecl { stroke: var(--ecl); }
+    .hero-fig .back { stroke-dasharray: 4 4; opacity: 0.45; stroke-width: 1.5; }
+    .hero-fig .axis { stroke: var(--eq); stroke-width: 1.4; stroke-dasharray: 6 4; }
+    .hero-fig .zen { stroke: #6b6e7a; stroke-width: 1.2; stroke-dasharray: 3 4; }
+    .hero-fig .phi { stroke: var(--ecl); stroke-width: 3.2; }
+    .hero-fig .pt { fill: #23252d; } .hero-fig .pt-eq { fill: var(--eq); } .hero-fig .pt-hor { fill: var(--hor); }
+    .hero-fig text { font-family: var(--font); font-size: 13px; font-weight: 600; paint-order: stroke; stroke: #f4f3ef; stroke-width: 4px; stroke-linejoin: round; }
+    .hero-fig .t { fill: #23252d; } .hero-fig .t-eq { fill: #b52a2a; } .hero-fig .t-ecl { fill: #8a5a00; } .hero-fig .t-hor { fill: #17703f; }
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; gap: 24px; }
+      .hero-fig { max-width: 320px; margin: 0 auto; }
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -24,6 +48,7 @@
   </header>
   <main class="page">
     <section class="hero">
+      <div class="hero-text">
       <p class="eyebrow">하이탑 지구과학Ⅱ ‘행성의 운동’ · 천문 올림피아드 심화</p>
       <h1>하늘을 보면 천구가 보이도록</h1>
       <p>천구의 구성 요소와 지평·적도·황도·은하 좌표계를 3D로 직접 돌려 보고, 위도와 시각을 바꾸며 일주 운동을 관찰하고, 내행성·외행성의 운동을 실제 날짜로 시뮬레이션합니다. 교과서의 기본 개념부터 올림피아드 수준의 계산까지 한곳에서 연습할 수 있습니다.</p>
@@ -31,6 +56,33 @@
         <a class="btn primary" href="celestial.html?step=1">학습 가이드로 시작하기</a>
         <a class="btn" href="training.html?mode=find">적경·적위 훈련</a>
       </div>
+      </div>
+      <figure class="hero-fig" aria-label="천구 모형 그림: 지평선, 천구의 적도, 황도, 천구 북극">
+        <svg viewBox="0 0 360 350" role="img">
+          <circle class="sphere" cx="180" cy="175" r="140"/>
+          <ellipse class="hor-plane" cx="180" cy="175" rx="140" ry="34"/>
+          <g transform="rotate(-29.0 180 175)"><path class="ecl back" d="M 40 175 A 140 36 0 0 1 320 175"/><path class="ecl" d="M 40 175 A 140 36 0 0 0 320 175"/></g>
+          <g transform="rotate(-52.4 180 175)"><path class="eq back" d="M 40 175 A 140 32 0 0 1 320 175"/><path class="eq" d="M 40 175 A 140 32 0 0 0 320 175"/></g>
+          <g transform="rotate(0.0 180 175)"><path class="hor back" d="M 40 175 A 140 34 0 0 1 320 175"/><path class="hor" d="M 40 175 A 140 34 0 0 0 320 175"/></g>
+          <line class="axis" x1="304.2" y1="270.7" x2="55.8" y2="79.3"/>
+          <line class="zen" x1="180" y1="35" x2="180" y2="175"/>
+          <path class="phi" d="M 40 175 A 140 140 0 0 1 69.1 89.6"/>
+          <circle class="pt-eq" cx="69.1" cy="89.6" r="4.5"/>
+          <circle class="pt" cx="180" cy="35" r="4"/>
+          <circle class="pt" cx="180" cy="175" r="3.5"/>
+          <circle class="pt-hor" cx="40" cy="175" r="4"/>
+          <circle class="pt-hor" cx="320" cy="175" r="4"/>
+          <text class="t" x="188" y="27">천정 Z</text>
+          <text class="t-eq" x="61.1" y="79.6" text-anchor="end">천구 북극 P</text>
+          <text class="t-ecl" x="32" y="123" text-anchor="end">h = φ</text>
+          <text class="t-hor" x="32" y="180" text-anchor="end">N</text>
+          <text class="t-hor" x="328" y="180">S</text>
+          <text class="t-hor" x="180" y="227" text-anchor="middle">지평선</text>
+          <text class="t-eq" x="271.4" y="60.1">천구의 적도</text>
+          <text class="t-ecl" x="310.4" y="107.1">황도</text>
+        </svg>
+        <figcaption>서울(φ = 37.6°)의 천구: 천구 북극의 고도는 위도와 같다</figcaption>
+      </figure>
     </section>
 
     <div class="cards">

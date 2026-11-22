@@ -51,7 +51,8 @@ index.html  celestial.html  planets.html  moon.html  kepler.html  training.html 
 css/style.css
 js/astro.js      천문 계산 엔진 (시간, 좌표 변환, 태양·달·행성 위치, 일식·월식, 케플러 방정식)
 js/stars.js      밝은 별 목록, 별자리 선
-js/skyscene.js   3D 천구 엔진 (three.js)
+js/skyscene.js   3D 천구 엔진 (three.js) — 천구 모형은 밝은 바탕, 관측자 시점은 밤하늘
+js/labels.js     2D 캔버스 라벨 도우미 (라벨끼리 겹치지 않는 자리 찾기)
 js/celestial.js  천구 실험실 UI와 학습 가이드
 js/planets.js    행성의 운동 실험실
 js/moon.js       달의 운동 실험실

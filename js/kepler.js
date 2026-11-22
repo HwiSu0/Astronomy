@@ -2,6 +2,7 @@
 //  kepler.js — 케플러 법칙 실험실
 // =====================================================================
 import * as A from './astro.js';
+import { begin, blockCircle, blockElement, label, place, around } from './labels.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -32,15 +33,9 @@ new ResizeObserver(resize).observe($('.stage'));
 resize();
 
 // 밝은 종이 바탕용 그림 색
-const INK = '#1f2129', MUTED = '#6b6e7a', FAINT = 'rgba(31,33,41,0.12)', PAPER = '#fbfaf8';
+const INK = '#1f2129', MUTED = '#5f6270', FAINT = 'rgba(31,33,41,0.12)', PAPER = '#fbfaf8';
 const C = { sun: '#e9a514', sunInk: '#9a6200', planet: '#2a6fd0', planetInk: '#1f5bb0', peri: '#c2570a', aph: '#2a62c9', vel: '#1d8a50', velInk: '#17703f', E: '#0b7fb0', M: '#3f8a1f', nu: '#d4650c', nuInk: '#b5540a', now: '#d23a50' };
 
-function label(ctx, text, x, y, color = INK, align = 'left', size = 12.5, weight = 600) {
-  ctx.font = `${Math.min(weight, 700)} ${size}px 'IBM Plex Sans KR', sans-serif`;
-  ctx.textAlign = align; ctx.textBaseline = 'middle';
-  ctx.lineWidth = 4; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(251,250,248,0.92)'; ctx.strokeText(text, x, y);
-  ctx.fillStyle = color; ctx.fillText(text, x, y);
-}
 function dot(ctx, x, y, r, color, halo = 0) {
   // halo: 큰 천체를 구별하기 위한 옅은 테두리 (빛 번짐 효과는 쓰지 않음)
   if (halo) { ctx.save(); ctx.globalAlpha = 0.16; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r + 2 + halo, 0, TAU); ctx.fill(); ctx.restore(); }
@@ -78,12 +73,22 @@ function drawMain() {
   const { a, e, N } = st;
   const b = a * Math.sqrt(1 - e * e), c = a * e;
   const usableH = h - barReserve();
-  const s = Math.min((w - 80) / (2 * a), (usableH - 60) / (2 * b));
-  const cx0 = w / 2, cy0 = 20 + usableH / 2;
+  const narrow = w < 560;
+  begin(0, 0, w, usableH);
+  const top = 40;  // 맨 위 설명 한 줄
+  const s = Math.min((w - 80) / (2 * a), (usableH - top - 50) / (2 * b));
+  const cx0 = w / 2, cy0 = top + (usableH - top) / 2;
   // 타원 중심이 화면 중앙에 오도록: 초점(태양) = 중심 + (c, 0)
   const X = (x) => cx0 + (x + c) * s, Y = (y) => cy0 - y * s;
   const o = { sect: $('#optSect').checked, vel: $('#optVel').checked, anom: $('#optAnom').checked, axes: $('#optAxes').checked };
   const cur = orbitState(st.phase);
+  // 라벨은 그림을 모두 그린 뒤 중요한 것부터 자리를 찾아 놓는다
+  const jobs = [];
+  const Sx = X(0), Sy = Y(0), Px = X(cur.x), Py = Y(cur.y);
+  blockCircle(Sx, Sy, 15); blockCircle(Px, Py, 12);
+  if (o.sect) label(ctx, narrow ? `같은 시간(P/${N}) 동안 쓸고 간 넓이는 모두 같다` : `같은 시간(P/${N}) 동안 쓸고 간 넓이 = πab/${N} = ${(Math.PI * a * b / N).toFixed(4)} AU² (모든 부채꼴이 같다)`, 16, 22, C.sunInk, 'left', narrow ? 12 : 13);
+  jobs.push(() => place(ctx, '태양 (초점 F)', [[Sx, Sy + 24, 'center'], [Sx, Sy - 24, 'center'], ...around(Sx, Sy, 18)], C.sunInk, 12.5, 700));
+  jobs.push(() => place(ctx, `r = ${cur.r.toFixed(3)} AU`, around(Px, Py, 16), C.planetInk, 13, 700));
 
   // 면적 부채꼴
   if (o.sect) {
@@ -106,13 +111,15 @@ function drawMain() {
     ctx.beginPath(); ctx.moveTo(X(-c - a), Y(0)); ctx.lineTo(X(-c + a), Y(0)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(X(-c), Y(-b)); ctx.lineTo(X(-c), Y(b)); ctx.stroke();
     ctx.setLineDash([]);
-    dot(ctx, X(-c), Y(0), 2.5, MUTED); label(ctx, '중심', X(-c), Y(0) + 13, MUTED, 'center', 11);
-    dot(ctx, X(-2 * c), Y(0), 3.5, MUTED); label(ctx, '빈 초점 F′', X(-2 * c), Y(0) - 13, MUTED, 'center', 11);
-    label(ctx, `근일점 (q = ${(a * (1 - e)).toFixed(3)} AU)`, X(a - c) + 6, Y(0) + 16, C.peri, 'right', 11.5);
-    label(ctx, `원일점 (Q = ${(a * (1 + e)).toFixed(3)} AU)`, X(-a - c) - 6, Y(0) + 16, C.aph, 'left', 11.5);
+    dot(ctx, X(-c), Y(0), 2.5, MUTED); dot(ctx, X(-2 * c), Y(0), 3.5, MUTED);
     dot(ctx, X(a - c), Y(0), 3, C.peri); dot(ctx, X(-a - c), Y(0), 3, C.aph);
-    label(ctx, 'a', X(-c + a / 2), Y(0) - 10, INK, 'center', 12, 700);
-    label(ctx, 'b', X(-c) + 9, Y(b / 2), INK, 'left', 12, 700);
+    const qx = X(a - c), Qx = X(-a - c), y0 = Y(0);
+    jobs.push(() => place(ctx, `근일점 (q = ${(a * (1 - e)).toFixed(3)} AU)`, [[qx + 4, y0 + 18, 'right'], [qx + 4, y0 - 18, 'right'], [qx + 4, y0 + 36, 'right'], [qx + 4, y0 - 36, 'right']], C.peri, 12.5, 600));
+    jobs.push(() => place(ctx, `원일점 (Q = ${(a * (1 + e)).toFixed(3)} AU)`, [[Qx - 4, y0 + 18, 'left'], [Qx - 4, y0 - 18, 'left'], [Qx - 4, y0 + 36, 'left'], [Qx - 4, y0 - 36, 'left']], C.aph, 12.5, 600));
+    jobs.push(() => place(ctx, '중심', [[X(-c), y0 + 15, 'center'], [X(-c), y0 - 15, 'center'], [X(-c) + 8, y0 + 15, 'left']], MUTED, 12, 500));
+    if (c * s > 30) jobs.push(() => place(ctx, '빈 초점 F′', [[X(-2 * c), y0 - 15, 'center'], [X(-2 * c), y0 + 15, 'center']], MUTED, 12, 500));
+    jobs.push(() => place(ctx, 'a', [[X(-c + a / 2), y0 - 11, 'center'], [X(-c + a / 2), y0 + 11, 'center'], [X(-c - a / 2), y0 - 11, 'center']], INK, 13, 700));
+    jobs.push(() => place(ctx, 'b', [[X(-c) + 9, Y(b / 2), 'left'], [X(-c) - 9, Y(b / 2), 'right'], [X(-c) + 9, Y(-b / 2), 'left']], INK, 13, 700));
   }
 
   // 근점 이각
@@ -127,19 +134,21 @@ function drawMain() {
     ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(...Qp); ctx.lineTo(X(cur.x), Y(cur.y)); ctx.stroke(); ctx.setLineDash([]);
     dot(ctx, Qp[0], Qp[1], 3.5, C.E);
     ctx.strokeStyle = C.E; ctx.beginPath(); ctx.arc(Cn[0], Cn[1], 26, 0, -cur.E, cur.E > 0); ctx.stroke();
-    label(ctx, `E = ${(A.norm360(cur.E * A.RAD)).toFixed(1)}°`, Cn[0] + 30 * Math.cos(-cur.E / 2), Cn[1] + 36 * Math.sin(-cur.E / 2), C.E, 'center', 11.5);
+    const eh = -cur.E / 2;
+    jobs.push(() => place(ctx, `E = ${(A.norm360(cur.E * A.RAD)).toFixed(1)}°`, [36, 50, 66].flatMap((d) => [0, 0.3, -0.3].map((k) => [Cn[0] + d * Math.cos(eh + k), Cn[1] + d * Math.sin(eh + k), 'center'])), C.E, 12.5, 600));
     ctx.strokeStyle = C.M; ctx.setLineDash([5, 3]);
     ctx.beginPath(); ctx.moveTo(...Cn); ctx.lineTo(...Mp); ctx.stroke(); ctx.setLineDash([]);
     dot(ctx, Mp[0], Mp[1], 4, C.M);
-    label(ctx, `M = ${(A.norm360(cur.M * A.RAD)).toFixed(1)}° (평균 운동)`, Mp[0], Mp[1] - 13, C.M, 'center', 11.5);
+    blockCircle(Mp[0], Mp[1], 6); blockCircle(Qp[0], Qp[1], 6);
+    jobs.push(() => place(ctx, `M = ${(A.norm360(cur.M * A.RAD)).toFixed(1)}° (평균 운동)`, [[Mp[0], Mp[1] - 15, 'center'], [Mp[0], Mp[1] + 15, 'center'], ...around(Mp[0], Mp[1], 12)], C.M, 12.5, 600));
     const nuA = cur.nu;
     ctx.strokeStyle = C.nu; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(0), Y(0), 40, 0, -nuA, nuA > 0); ctx.stroke();
-    label(ctx, `ν = ${A.norm360(nuA * A.RAD).toFixed(1)}°`, X(0) + 52 * Math.cos(-nuA / 2), Y(0) + 52 * Math.sin(-nuA / 2), C.nuInk, 'center', 11.5);
+    const nh = -nuA / 2;
+    jobs.push(() => place(ctx, `ν = ${A.norm360(nuA * A.RAD).toFixed(1)}°`, [54, 70, 88].flatMap((d) => [0, 0.3, -0.3].map((k) => [Sx + d * Math.cos(nh + k), Sy + d * Math.sin(nh + k), 'center'])), C.nuInk, 12.5, 600));
   }
 
   // 태양
   dot(ctx, X(0), Y(0), 9, C.sun, 3.4);
-  label(ctx, '태양 (초점 F)', X(0), Y(0) + 22, C.sunInk, 'center', 11.5);
   // 반지름 벡터
   ctx.strokeStyle = 'rgba(176,122,0,0.8)'; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(cur.x), Y(cur.y)); ctx.stroke();
@@ -149,18 +158,20 @@ function drawMain() {
     const L = Math.min((cur.v / vc) * 0.1 * Math.min(w, usableH), 0.32 * Math.min(w, usableH));
     const ux = cur.vx / cur.v, uy = cur.vy / cur.v;
     arrow(ctx, X(cur.x), Y(cur.y), X(cur.x) + ux * L, Y(cur.y) - uy * L, C.vel, 2.4);
-    label(ctx, `v = ${(cur.v * AUYR_TO_KMS).toFixed(2)} km/s`, X(cur.x) + ux * L + 8, Y(cur.y) - uy * L - 10, C.velInk, 'left', 12);
+    const tx = X(cur.x) + ux * L, ty = Y(cur.y) - uy * L;
+    jobs.splice(2, 0, () => place(ctx, `v = ${(cur.v * AUYR_TO_KMS).toFixed(2)} km/s`, [[tx + 8, ty - 10, 'left'], [tx - 8, ty - 10, 'right'], ...around(tx, ty, 14)], C.velInk, 13, 700));
   }
   dot(ctx, X(cur.x), Y(cur.y), 7, C.planet, 2.6);
-  label(ctx, `r = ${cur.r.toFixed(3)} AU`, X(cur.x) - 12, Y(cur.y) + 16, C.planetInk, 'right', 12);
-  if (o.sect) label(ctx, `같은 시간(P/${N}) 동안 쓸고 간 넓이 = πab/${N} = ${(Math.PI * a * b / N).toFixed(4)} AU² (모든 부채꼴이 같다)`, 16, 22, C.sunInk, 'left', 12.5);
+  jobs.forEach((f) => f());
 }
 
 function drawSub() {
   const { ctx, w, h } = M2;
+  begin(0, 0, w, h);
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = PAPER; ctx.fillRect(0, 0, w, h);
-  const pad = { l: 56, r: 20, t: 40, b: 26 };
+  const ovB = blockElement($('#cSub'), $('.canvas-sub .overlay-tl'));
+  const pad = { l: 56, r: 20, t: w < 560 ? Math.max(40, ovB + 22) : 44, b: 26 };
   const pw = w - pad.l - pad.r, ph = h - pad.t - pad.b;
   if (pw < 40 || ph < 30) return;
   if (st.sub === 'rv') {
@@ -175,9 +186,9 @@ function drawSub() {
     const q = orbitState(st.phase);
     ctx.strokeStyle = 'rgba(31,33,41,0.6)'; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(xs(st.phase), pad.t); ctx.lineTo(xs(st.phase), pad.t + ph); ctx.stroke(); ctx.setLineDash([]);
     dot(ctx, xs(st.phase), yr(q.r), 4, C.aph); dot(ctx, xs(st.phase), yv(q.v * AUYR_TO_KMS), 4, C.vel);
-    label(ctx, `속력 v (최대 ${vmax.toFixed(1)} km/s)`, w - pad.r, pad.t - 12, C.velInk, 'right', 11.5);
-    label(ctx, `거리 r (최대 ${rmax.toFixed(2)} AU)`, w - pad.r - 190, pad.t - 12, C.aph, 'right', 11.5);
-    label(ctx, '근일점 통과 후 시간 →', pad.l + 4, pad.t + 10, MUTED, 'left', 11, 500);
+    place(ctx, `속력 v (최대 ${vmax.toFixed(1)} km/s)`, [[w - pad.r, pad.t - 12, 'right'], [w - pad.r, 12, 'right']], C.velInk, 12, 600);
+    place(ctx, `거리 r (최대 ${rmax.toFixed(2)} AU)`, [[w - pad.r - 200, pad.t - 12, 'right'], [w - pad.r, pad.t + 10, 'right'], [pad.l + 4, pad.t + 26, 'left']], C.aph, 12, 600);
+    place(ctx, '근일점 통과 후 시간 →', [[pad.l + 4, pad.t + 10, 'left'], [pad.l + 4, pad.t + ph - 10, 'left']], MUTED, 11.5, 500);
   } else {
     const lx = (a) => Math.log10(a), lo = -0.6, hi = 1.75, plo = -0.8, phi = 2.6;
     const xs = (a) => pad.l + ((lx(a) - lo) / (hi - lo)) * pw, ys = (p) => pad.t + ph - ((lx(p) - plo) / (phi - plo)) * ph;
@@ -186,10 +197,10 @@ function drawSub() {
     [0.3, 1, 10, 100].forEach((p) => { ctx.beginPath(); ctx.moveTo(pad.l, ys(p)); ctx.lineTo(w - pad.r, ys(p)); ctx.stroke(); label(ctx, `${p}년`, pad.l - 6, ys(p), MUTED, 'right', 10.5, 500); });
     ctx.strokeStyle = 'rgba(176,122,0,0.8)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(xs(0.25), ys(Math.pow(0.25, 1.5))); ctx.lineTo(xs(56), ys(Math.pow(56, 1.5))); ctx.stroke();
     label(ctx, 'P² = a³ (기울기 3/2)', xs(20), ys(Math.pow(20, 1.5)) - 14, C.sunInk, 'center', 11.5);
-    REAL.forEach(([n, a, p]) => { dot(ctx, xs(a), ys(p), 3.5, 'rgba(31,33,41,0.6)'); label(ctx, n, xs(a) + 6, ys(p) + 10, MUTED, 'left', 10.5, 500); });
+    REAL.forEach(([n, a, p]) => { dot(ctx, xs(a), ys(p), 3.5, 'rgba(31,33,41,0.6)'); label(ctx, n, xs(a) + 6, ys(p) + 10, MUTED, 'left', 11, 500); });
     dot(ctx, xs(st.a), ys(period()), 6, C.now, 2.4);
     label(ctx, `현재 궤도 (M = ${st.M})`, xs(st.a) + 9, ys(period()) - 12, C.now, 'left', 11.5);
-    label(ctx, 'log P = 1.5 log a − 0.5 log M  (P: 년, a: AU)', w - pad.r, pad.t - 12, MUTED, 'right', 11.5);
+    place(ctx, 'log P = 1.5 log a − 0.5 log M  (P: 년, a: AU)', [[w - pad.r, pad.t - 12, 'right'], [w - pad.r, pad.t + ph - 10, 'right']], MUTED, 11.5, 500);
   }
 }
 

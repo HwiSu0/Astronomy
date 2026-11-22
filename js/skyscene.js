@@ -20,15 +20,36 @@ export const R = 10;
 const LY = { SURF: 1, INT: 2, OCC: 3, GROUND: 4 };
 const XV = new THREE.Vector3(1, 0, 0), YV = new THREE.Vector3(0, 1, 0), ZV = new THREE.Vector3(0, 0, 1);
 
+// 색은 두 벌을 둔다.
+//  COL       : 관측자 시점(밤하늘, 어두운 바탕)용 밝은 색
+//  PAPER_COL : 천구 모형(밝은 종이 바탕)용 진한 색 — css/style.css의 좌표계 변수와 같은 계열
+// 선·점을 만들 때 색 대신 키 이름('hor', 'eq' …)을 넘기면 시점이 바뀔 때 색이 자동으로 바뀐다.
 export const COL = {
   hor: 0x5be39a, horGrid: 0x2f9a63, meridian: 0xf0f0f0, prime: 0xb7c0d6,
   eq: 0xff6b6b, eqGrid: 0xc0504f, axis: 0xff8f8f,
   ecl: 0xffcc4d, eclGrid: 0xb08d2e,
   gal: 0xd08cff, galGrid: 0x8e62b8,
-  ha: 0xffa23f, tri: 0x40c4ff, sun: 0xffc94a, con: 0x5577aa,
+  ha: 0xffa23f, tri: 0x40c4ff, sun: 0xffc94a, con: 0x6f8fc4,
   altArc: 0x8dffb4, azArc: 0x2fd47a, decArc: 0xff9e94, raArc: 0xff4d6d, haArc: 0xffa23f,
   lonArc: 0xffe066, latArc: 0xfff2a8, glArc: 0xd08cff, gbArc: 0xf0c8ff,
+  zen: 0xffffff, zAxis: 0xdddddd, obs: 0xffeeb0, prec: 0x7fdbff, err: 0xff4081,
+  sumS: 0xff8a65, eqx: 0xffd166, winS: 0x6fb6ff, moonTrail: 0xe8e4d4, shell: 0x6ea8ff, horDisk: 0x1e7a50,
 };
+export const PAPER_COL = {
+  hor: 0x1d8a50, horGrid: 0x52a578, meridian: 0x2f323b, prime: 0x6b6e7a,
+  eq: 0xcf3434, eqGrid: 0xd9706f, axis: 0xcf3434,
+  ecl: 0xb07a00, eclGrid: 0xc9a245,
+  gal: 0x7a45c4, galGrid: 0xa585d8,
+  ha: 0xd4650c, tri: 0x0b7fb0, sun: 0xc98a00, con: 0x7d8bab,
+  altArc: 0x15804a, azArc: 0x0b5e33, decArc: 0xe0605a, raArc: 0xb01f2d, haArc: 0xd4650c,
+  lonArc: 0xb07a00, latArc: 0x8a5a00, glArc: 0x7a45c4, gbArc: 0x5a2e9a,
+  zen: 0x23252d, zAxis: 0x6b6e7a, obs: 0x3a3d47, prec: 0x0b7fb0, err: 0xd81b60,
+  sumS: 0xd4532b, eqx: 0xb07a00, winS: 0x2a62c9, moonTrail: 0x6b6e7a, shell: 0x7fa3e0, horDisk: 0x1d8a50,
+};
+// 바탕색: 천구 모형은 밝은 종이색, 관측자 시점은 남색 밤하늘
+const PAPER_BG = 0xf1f0ec;
+const NIGHT_BG = 0x081226;
+const STAR_INK = [0.11, 0.15, 0.27];
 
 export const DEFAULT_SHOW = {
   shell: true, horizon: true, cardinals: true, zenith: true, meridian: true, primeVertical: false, horGrid: false,
@@ -88,18 +109,21 @@ function mulberry32(a) {
   };
 }
 
+// aColor: 밤하늘용 색, aColor2: 종이 바탕용 색. uPaper = 1이면 종이 모드
 const POINT_VS = `
-  attribute float aSize; attribute vec3 aColor; varying vec3 vColor;
-  uniform float uScale; uniform float uPR;
-  void main(){ vColor = aColor; vec4 mv = modelViewMatrix * vec4(position,1.0);
-    gl_PointSize = aSize * uScale * uPR; gl_Position = projectionMatrix * mv; }`;
+  attribute float aSize; attribute vec3 aColor; attribute vec3 aColor2; varying vec3 vColor;
+  uniform float uScale; uniform float uPR; uniform float uPaper;
+  void main(){ vColor = mix(aColor, aColor2, uPaper); vec4 mv = modelViewMatrix * vec4(position,1.0);
+    gl_PointSize = aSize * uScale * uPR * mix(1.0, 0.62, uPaper); gl_Position = projectionMatrix * mv; }`;
 const STAR_FS = `
-  uniform float uOpacity; varying vec3 vColor;
+  uniform float uOpacity; uniform float uPaper; varying vec3 vColor;
   void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c) * 2.0; if (d > 1.0) discard;
     float core = 1.0 - smoothstep(0.0, 0.42, d); float glow = exp(-d * d * 6.0);
-    gl_FragColor = vec4(vColor * (0.6 + 0.6 * core), (0.95 * core + 0.45 * glow) * uOpacity); }`;
+    vec4 sky = vec4(vColor * (0.6 + 0.6 * core), (0.95 * core + 0.45 * glow) * uOpacity);
+    vec4 paper = vec4(vColor, (1.0 - smoothstep(0.7, 0.95, d)) * uOpacity);
+    gl_FragColor = mix(sky, paper, uPaper); }`;
 const SOFT_FS = `
-  uniform float uOpacity; varying vec3 vColor;
+  uniform float uOpacity; uniform float uPaper; varying vec3 vColor;
   void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c) * 2.0; if (d > 1.0) discard;
     gl_FragColor = vec4(vColor, exp(-d * d * 4.0) * uOpacity); }`;
 
@@ -121,6 +145,7 @@ export class SkyScene {
     this.obsAz = 180; this.obsAlt = 30; this.obsFov = 80;
     this._outsidePos = new THREE.Vector3();
     this.lineMats = []; this.surfMats = []; this.labels = []; this.regList = [];
+    this.themed = []; this.pointMats = []; this.paper = null;
     this.markers = [];
     this.starAlpha = 1;
     this._dirty = true;
@@ -145,7 +170,7 @@ export class SkyScene {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(w, h);
-    this.renderer.setClearColor(0x04060d, 1);
+    this.renderer.setClearColor(PAPER_BG, 1);
     this.el.appendChild(this.renderer.domElement);
 
     this.labelRenderer = new CSS2DRenderer();
@@ -171,6 +196,7 @@ export class SkyScene {
     this.renderer.setSize(w, h);
     this.labelRenderer.setSize(w, h);
     this.camera.aspect = w / h;
+    if (this.view === 'outside') this.camera.fov = this._outsideFov();
     this.camera.updateProjectionMatrix();
     this.lineMats.forEach((m) => m.resolution.set(w, h));
   }
@@ -188,6 +214,30 @@ export class SkyScene {
     return this._reg(keys, obj);
   }
   _surf(mat, base) { const e = { mat, base }; this.surfMats.push(e); return e; }
+  /** 색 키('hor' 등)면 시점에 따라 바뀌도록 등록하고, 지금 쓸 색 값을 돌려준다 */
+  _color(mat, c) {
+    if (typeof c !== 'string') return c;
+    this.themed.push({ mat, sky: COL[c], paper: PAPER_COL[c] });
+    return COL[c];
+  }
+  /** 밤하늘 ↔ 종이 바탕 전환: 선·점·라벨의 색과 혼합 방식을 바꾼다 */
+  _applyTheme(paper) {
+    if (this.paper === paper) return;
+    this.paper = paper;
+    for (const t of this.themed) t.mat.color.setHex(paper ? t.paper : t.sky);
+    for (const m of this.pointMats) {
+      m.uniforms.uPaper.value = paper ? 1 : 0;
+      m.blending = paper ? THREE.NormalBlending : THREE.AdditiveBlending;
+      m.needsUpdate = true;
+    }
+    this.trailLines.material.blending = paper ? THREE.NormalBlending : THREE.AdditiveBlending;
+    this.trailLines.material.needsUpdate = true;
+    this.shellMat.uniforms.uColor.value.setHex(paper ? PAPER_COL.shell : COL.shell);
+    this.shellMat.uniforms.uOpacity.value = paper ? 0.42 : 0.16;
+    this.horDiskMat.opacity = paper ? 0.1 : 0.2;
+    this.el.classList.toggle('paper', paper);
+    this._dirty = true;
+  }
   _dim(f) {
     for (const e of this.surfMats) {
       if (e.mat.uniforms && e.mat.uniforms.uOpacity) e.mat.uniforms.uOpacity.value = e.base * f;
@@ -200,9 +250,10 @@ export class SkyScene {
     const g = new LineGeometry();
     g.setPositions(pos);
     const m = new LineMaterial({
-      color, linewidth: width, transparent: true, opacity: o.opacity ?? 1, depthWrite: false,
+      color: 0xffffff, linewidth: width, transparent: true, opacity: o.opacity ?? 1, depthWrite: false,
       dashed: !!o.dashed, dashSize: o.dash ?? 0.28, gapSize: o.gap ?? 0.2,
     });
+    m.color.setHex(this._color(m, color));
     m.resolution.set(this.w, this.h);
     this.lineMats.push(m);
     const line = new Line2(g, m);
@@ -234,12 +285,14 @@ export class SkyScene {
     for (const pl of polylines) for (let i = 0; i < pl.length - 1; i++) arr.push(pl[i].x, pl[i].y, pl[i].z, pl[i + 1].x, pl[i + 1].y, pl[i + 1].z);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
-    const m = new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false });
+    const m = new THREE.LineBasicMaterial({ transparent: true, opacity, depthWrite: false });
+    m.color.setHex(this._color(m, color));
     if (surface) this._surf(m, opacity);
     return new THREE.LineSegments(g, m);
   }
   _marker(parent, pos, color, keys, size = 0.13, layer = LY.SURF) {
-    const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, depthWrite: false });
+    const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 1, depthWrite: false });
+    m.color.setHex(this._color(m, color));
     this._surf(m, 1);
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(size, 16, 12), m);
     mesh.position.copy(pos);
@@ -260,10 +313,11 @@ export class SkyScene {
   }
   _pointsMaterial(base, soft = false, additive = true) {
     const m = new THREE.ShaderMaterial({
-      uniforms: { uOpacity: { value: base }, uScale: { value: 1 }, uPR: { value: this.renderer.getPixelRatio() } },
+      uniforms: { uOpacity: { value: base }, uScale: { value: 1 }, uPR: { value: this.renderer.getPixelRatio() }, uPaper: { value: 0 } },
       vertexShader: POINT_VS, fragmentShader: soft ? SOFT_FS : STAR_FS,
       transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
     });
+    this.pointMats.push(m);
     return m;
   }
 
@@ -294,14 +348,14 @@ export class SkyScene {
   _buildHorizon() {
     const w = this.world;
     // 구면 (프레넬 효과 유리구)
-    const shellMat = new THREE.ShaderMaterial({
-      uniforms: { uColor: { value: new THREE.Color(0x6ea8ff) }, uOpacity: { value: 0.16 } },
+    const shellMat = (this.shellMat = new THREE.ShaderMaterial({
+      uniforms: { uColor: { value: new THREE.Color(COL.shell) }, uOpacity: { value: 0.16 } },
       vertexShader: `varying vec3 vN; varying vec3 vV;
         void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
       fragmentShader: `uniform vec3 uColor; uniform float uOpacity; varying vec3 vN; varying vec3 vV;
         void main(){ float f = pow(1.0 - abs(dot(vN, vV)), 2.2); gl_FragColor = vec4(uColor, uOpacity * (0.18 + 0.95 * f)); }`,
       transparent: true, depthWrite: false, side: THREE.FrontSide,
-    });
+    }));
     this._add(w, new THREE.Mesh(new THREE.SphereGeometry(R * 0.999, 96, 64), shellMat), LY.INT, ['shell', '$outside']);
 
     // 깊이 가림막 (뒤쪽 선을 흐리게 하기 위한 보이지 않는 구)
@@ -309,47 +363,49 @@ export class SkyScene {
     this._add(w, occ, LY.OCC, ['$outside']);
 
     // 지평면
-    const disk = new THREE.Mesh(new THREE.CircleGeometry(R, 160).rotateX(-Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: 0x1e7a50, transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false }));
+    this.horDiskMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false });
+    this.horDiskMat.color.setHex(this._color(this.horDiskMat, 'horDisk'));
+    const disk = new THREE.Mesh(new THREE.CircleGeometry(R, 160).rotateX(-Math.PI / 2), this.horDiskMat);
     this._add(w, disk, LY.INT, ['horizon', '$outside']);
-    this._add(w, this._thick(curve((a) => horWorld(a, 0), 0, 360, 240), COL.hor, 2.8), LY.SURF, ['horizon']);
+    this._add(w, this._thick(curve((a) => horWorld(a, 0), 0, 360, 240), 'hor', 2.8), LY.SURF, ['horizon']);
     this._label('지평선', 'lbl-hor', ['horizon'], w, horWorld(205, -3.5));
 
     // 땅 (관측자 시점)
-    this.groundMat = new THREE.MeshBasicMaterial({ color: 0x0b1a12, side: THREE.BackSide, transparent: true, opacity: 1, depthWrite: true });
+    this.groundMat = new THREE.MeshBasicMaterial({ color: 0x13251a, side: THREE.BackSide, transparent: true, opacity: 1, depthWrite: true });
     const ground = new THREE.Mesh(new THREE.SphereGeometry(R * 0.985, 128, 64, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), this.groundMat);
     this._add(w, ground, LY.GROUND, ['$observer']);
 
     // 방위
     [[0, '북점 N'], [90, '동점 E'], [180, '남점 S'], [270, '서점 W']].forEach(([az, t]) => {
-      this._marker(w, horWorld(az, 0), COL.hor, ['cardinals'], 0.14);
+      this._marker(w, horWorld(az, 0), 'hor', ['cardinals'], 0.14);
       this._label(t, 'lbl-card', ['cardinals'], w, horWorld(az, 0, R * 1.07));
     });
 
     // 천정·천저
-    this._marker(w, new THREE.Vector3(0, R, 0), 0xffffff, ['zenith'], 0.15);
-    this._marker(w, new THREE.Vector3(0, -R, 0), 0xffffff, ['zenith', '$outside'], 0.15);
+    this._marker(w, new THREE.Vector3(0, R, 0), 'zen', ['zenith'], 0.15);
+    this._marker(w, new THREE.Vector3(0, -R, 0), 'zen', ['zenith', '$outside'], 0.15);
     this._label('천정 Z', 'lbl-point', ['zenith'], w, new THREE.Vector3(0, R * 1.07, 0));
     this._label('천저 Z′', 'lbl-point', ['zenith', '$outside'], w, new THREE.Vector3(0, -R * 1.07, 0));
-    this._add(w, this._thick([new THREE.Vector3(0, -R, 0), new THREE.Vector3(0, R, 0)], 0xdddddd, 1.2, { dashed: true, surface: false, opacity: 0.6 }), LY.INT, ['zenith', '$outside']);
+    this._add(w, this._thick([new THREE.Vector3(0, -R, 0), new THREE.Vector3(0, R, 0)], 'zAxis', 1.2, { dashed: true, surface: false, opacity: 0.6 }), LY.INT, ['zenith', '$outside']);
 
     // 자오선, 묘유선
-    this._add(w, this._thick(curve((t) => new THREE.Vector3(0, R * A.sind(t), -R * A.cosd(t)), 0, 360, 240), COL.meridian, 1.8, { opacity: 0.9 }), LY.SURF, ['meridian']);
+    this._add(w, this._thick(curve((t) => new THREE.Vector3(0, R * A.sind(t), -R * A.cosd(t)), 0, 360, 240), 'meridian', 1.8, { opacity: 0.9 }), LY.SURF, ['meridian']);
     this._label('자오선', 'lbl-mer', ['meridian'], w, new THREE.Vector3(0, R * A.sind(128), -R * A.cosd(128)));
-    this._add(w, this._thick(curve((t) => new THREE.Vector3(R * A.cosd(t), R * A.sind(t), 0), 0, 360, 240), COL.prime, 1.5, { dashed: true, opacity: 0.85 }), LY.SURF, ['primeVertical']);
+    this._add(w, this._thick(curve((t) => new THREE.Vector3(R * A.cosd(t), R * A.sind(t), 0), 0, 360, 240), 'prime', 1.5, { dashed: true, opacity: 0.85 }), LY.SURF, ['primeVertical']);
     this._label('묘유선', 'lbl-mer', ['primeVertical'], w, new THREE.Vector3(R * A.cosd(52), R * A.sind(52), 0));
 
     // 고도·방위각 격자
     const pl = [];
     for (let alt = -80; alt <= 80; alt += 10) if (alt !== 0) pl.push(curve((a) => horWorld(a, alt), 0, 360, 144));
     for (let az = 0; az < 360; az += 15) pl.push(curve((h) => horWorld(az, h), -90, 90, 72));
-    this._add(w, this._segments(pl, COL.horGrid, 0.42), LY.SURF, ['horGrid']);
+    this._add(w, this._segments(pl, 'horGrid', 0.42), LY.SURF, ['horGrid']);
     for (let az = 30; az < 360; az += 30) if (az % 90) this._label(`${az}°`, 'lbl-hor', ['horGrid'], w, horWorld(az, 0, R * 1.03));
     for (let alt = 10; alt <= 80; alt += 10) this._label(`${alt}°`, 'lbl-hor', ['horGrid'], w, horWorld(180, alt));
 
     // 관측자
     const fig = new THREE.Group();
-    const fm = new THREE.MeshBasicMaterial({ color: 0xffeeb0 });
+    const fm = new THREE.MeshBasicMaterial();
+    fm.color.setHex(this._color(fm, 'obs'));
     const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.22, 0.62, 20), fm); body.position.y = 0.31;
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 14), fm); head.position.y = 0.8;
     fig.add(body, head);
@@ -359,18 +415,19 @@ export class SkyScene {
   _buildEquatorial() {
     const ha = this.haGroup, eq = this.eqGroup;
     // 천구의 적도와 극 (시간각 좌표계 안에 둔다)
-    this._add(ha, this._thick(curve((a) => eqLocal(a, 0), 0, 360, 240), COL.eq, 2.8), LY.SURF, ['equator']);
+    this._add(ha, this._thick(curve((a) => eqLocal(a, 0), 0, 360, 240), 'eq', 2.8), LY.SURF, ['equator']);
     this._label('천구의 적도', 'lbl-eq', ['equator'], ha, eqLocal(-28, -3.5));
-    this._marker(ha, eqLocal(0, 90), COL.eq, ['poles'], 0.16);
-    this._marker(ha, eqLocal(0, -90), COL.eq, ['poles'], 0.16);
+    this._marker(ha, eqLocal(0, 90), 'eq', ['poles'], 0.16);
+    this._marker(ha, eqLocal(0, -90), 'eq', ['poles'], 0.16);
     this._label('천구 북극 P', 'lbl-eq lbl-strong', ['poles'], ha, eqLocal(0, 90, R * 1.08));
     this._label('천구 남극 P′', 'lbl-eq lbl-strong', ['poles'], ha, eqLocal(0, -90, R * 1.08));
-    this._add(ha, this._thick([new THREE.Vector3(0, 0, -R * 1.22), new THREE.Vector3(0, 0, R * 1.22)], COL.axis, 1.6, { dashed: true, surface: false, opacity: 0.8 }), LY.INT, ['poles', '$outside']);
+    this._add(ha, this._thick([new THREE.Vector3(0, 0, -R * 1.22), new THREE.Vector3(0, 0, R * 1.22)], 'axis', 1.6, { dashed: true, surface: false, opacity: 0.8 }), LY.INT, ['poles', '$outside']);
 
     // 일주 운동 방향 화살표 (동 → 서)
     const coneG = new THREE.ConeGeometry(0.2, 0.55, 18);
     [60, 20, -20, -60].forEach((a) => {
-      const m = new THREE.MeshBasicMaterial({ color: COL.ha, transparent: true, opacity: 1, depthWrite: false });
+      const m = new THREE.MeshBasicMaterial({ transparent: true, opacity: 1, depthWrite: false });
+      m.color.setHex(this._color(m, 'ha'));
       this._surf(m, 1);
       const cone = new THREE.Mesh(coneG, m);
       cone.position.copy(eqLocal(a, 0));
@@ -386,45 +443,45 @@ export class SkyScene {
     const pl = [];
     for (let d = -80; d <= 80; d += 10) if (d !== 0) pl.push(curve((a) => eqLocal(a, d), 0, 360, 144));
     for (let h = 0; h < 24; h++) if (h) pl.push(curve((d) => eqLocal(h * 15, d), -80, 80, 64));
-    this._add(eq, this._segments(pl, COL.eqGrid, 0.45), LY.SURF, ['eqGrid']);
-    this._add(eq, this._thick(curve((d) => eqLocal(0, d), -90, 90, 90), COL.eq, 1.6, { opacity: 0.9 }), LY.SURF, ['eqGrid']);
+    this._add(eq, this._segments(pl, 'eqGrid', 0.45), LY.SURF, ['eqGrid']);
+    this._add(eq, this._thick(curve((d) => eqLocal(0, d), -90, 90, 90), 'eq', 1.6, { opacity: 0.9 }), LY.SURF, ['eqGrid']);
     for (let h = 0; h < 24; h++) this._label(`${h}h`, 'lbl-eq lbl-small', ['eqGrid'], eq, eqLocal(h * 15, -3.2));
     this._label('적경 0h 시간권', 'lbl-eq lbl-small', ['eqGrid'], eq, eqLocal(0, 38));
   }
 
   _buildEcliptic() {
     const eq = this.eqGroup;
-    this._add(eq, this._thick(curve((l) => eclLocal(l, 0), 0, 360, 240), COL.ecl, 2.8), LY.SURF, ['ecliptic']);
+    this._add(eq, this._thick(curve((l) => eclLocal(l, 0), 0, 360, 240), 'ecl', 2.8), LY.SURF, ['ecliptic']);
     this._label('황도', 'lbl-ecl lbl-strong', ['ecliptic'], eq, eclLocal(128, 3.5));
     const pts = [[0, '춘분점 ♈ (γ)'], [90, '하지점'], [180, '추분점 ♎'], [270, '동지점']];
     pts.forEach(([l, t]) => {
-      this._marker(eq, eclLocal(l, 0), COL.ecl, ['eclPoints'], 0.16);
+      this._marker(eq, eclLocal(l, 0), 'ecl', ['eclPoints'], 0.16);
       this._label(t, 'lbl-ecl', ['eclPoints'], eq, eclLocal(l, 0, R * 1.06));
     });
-    this._marker(eq, eclLocal(0, 90), COL.ecl, ['eclPoints'], 0.13);
-    this._marker(eq, eclLocal(0, -90), COL.ecl, ['eclPoints'], 0.13);
+    this._marker(eq, eclLocal(0, 90), 'ecl', ['eclPoints'], 0.13);
+    this._marker(eq, eclLocal(0, -90), 'ecl', ['eclPoints'], 0.13);
     this._label('황도 북극', 'lbl-ecl', ['eclPoints'], eq, eclLocal(0, 90, R * 1.06));
     this._label('황도 남극', 'lbl-ecl', ['eclPoints'], eq, eclLocal(0, -90, R * 1.06));
 
     const pl = [];
     for (let b = -75; b <= 75; b += 15) if (b) pl.push(curve((l) => eclLocal(l, b), 0, 360, 144));
     for (let l = 0; l < 360; l += 30) pl.push(curve((b) => eclLocal(l, b), -80, 80, 64));
-    this._add(eq, this._segments(pl, COL.eclGrid, 0.45), LY.SURF, ['eclGrid']);
+    this._add(eq, this._segments(pl, 'eclGrid', 0.45), LY.SURF, ['eclGrid']);
     for (let l = 30; l < 360; l += 30) if (l % 90) this._label(`λ ${l}°`, 'lbl-ecl lbl-small', ['eclGrid'], eq, eclLocal(l, -3.2));
   }
 
   _buildGalactic() {
     const j = this.jGroup;
-    this._add(j, this._thick(curve((l) => galLocal(l, 0), 0, 360, 240), COL.gal, 2.8), LY.SURF, ['galactic']);
+    this._add(j, this._thick(curve((l) => galLocal(l, 0), 0, 360, 240), 'gal', 2.8), LY.SURF, ['galactic']);
     this._label('은하 적도 (은하면)', 'lbl-gal lbl-strong', ['galactic'], j, galLocal(62, 3.5));
     [[0, 0, '은하 중심 (l = 0°)'], [180, 0, '은하 반중심'], [0, 90, '은하 북극'], [0, -90, '은하 남극']].forEach(([l, b, t]) => {
-      this._marker(j, galLocal(l, b), COL.gal, ['galactic'], 0.16);
+      this._marker(j, galLocal(l, b), 'gal', ['galactic'], 0.16);
       this._label(t, 'lbl-gal', ['galactic'], j, galLocal(l, b, R * 1.06));
     });
     const pl = [];
     for (let b = -75; b <= 75; b += 15) if (b) pl.push(curve((l) => galLocal(l, b), 0, 360, 144));
     for (let l = 0; l < 360; l += 30) pl.push(curve((b) => galLocal(l, b), -80, 80, 64));
-    this._add(j, this._segments(pl, COL.galGrid, 0.45), LY.SURF, ['galGrid']);
+    this._add(j, this._segments(pl, 'galGrid', 0.45), LY.SURF, ['galGrid']);
     for (let l = 30; l < 360; l += 30) if (l !== 180) this._label(`l ${l}°`, 'lbl-gal lbl-small', ['galGrid'], j, galLocal(l, -3.2));
 
     // 은하수 (은하 좌표 기반으로 만든 빛의 띠)
@@ -444,9 +501,12 @@ export class SkyScene {
       col.set([0.72 * br, 0.78 * br, 1.0 * br], i * 3);
       size[i] = 5 + rnd() * 11;
     }
+    const col2 = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) col2.set([0.42, 0.5, 0.7], i * 3);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('aColor2', new THREE.BufferAttribute(col2, 3));
     g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
     this.mwMat = this._pointsMaterial(0.07, true);
     this.mwSurf = this._surf(this.mwMat, 0.07);
@@ -456,7 +516,7 @@ export class SkyScene {
   _buildStars() {
     const j = this.jGroup;
     const n = STARS.length;
-    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n);
+    const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), col2 = new Float32Array(n * 3), size = new Float32Array(n);
     this.starLocal = [];
     STARS.forEach((s, i) => {
       const p = eqLocal(s.ra, s.dec, R * 0.999);
@@ -464,11 +524,13 @@ export class SkyScene {
       pos.set([p.x, p.y, p.z], i * 3);
       const c = new THREE.Color(SP_COLOR[s.sp] || '#ffffff');
       col.set([c.r, c.g, c.b], i * 3);
+      col2.set(STAR_INK, i * 3);
       size[i] = A.clamp(16.5 - 3.1 * s.mag, 5, 26);
     });
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('aColor2', new THREE.BufferAttribute(col2, 3));
     g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
     this.starMat = this._pointsMaterial(1);
     this.starSurf = this._surf(this.starMat, 1);
@@ -488,17 +550,17 @@ export class SkyScene {
       const va = eqLocal(sa.ra, sa.dec), vb = eqLocal(sb.ra, sb.dec);
       pl.push(slerpArc(va, vb, Math.max(2, Math.ceil(va.angleTo(vb) * A.RAD / 3)), R * 0.999));
     }
-    this.conMat = this._segments(pl, COL.con, 0.6);
+    this.conMat = this._segments(pl, 'con', 0.6);
     this._add(j, this.conMat, LY.SURF, ['constellations']);
     constellationCenters().forEach((c) => this._label(c.ko, 'lbl-con', ['conNames'], j, eqLocal(c.ra, c.dec)));
 
     // 세차 원: 천구 북극이 J2000 황도 북극 둘레로 그리는 원
-    this._add(j, this._thick(curve((l) => eclLocal(l, 90 - A.OBLIQUITY), 0, 360, 240), 0x7fdbff, 1.8, { dashed: true }), LY.SURF, ['precessionCircle']);
-    this._marker(j, eclLocal(0, 90), COL.ecl, ['precessionCircle'], 0.13);
+    this._add(j, this._thick(curve((l) => eclLocal(l, 90 - A.OBLIQUITY), 0, 360, 240), 'prec', 1.8, { dashed: true }), LY.SURF, ['precessionCircle']);
+    this._marker(j, eclLocal(0, 90), 'ecl', ['precessionCircle'], 0.13);
     this._label('황도 북극 (J2000)', 'lbl-ecl lbl-small', ['precessionCircle'], j, eclLocal(0, 90, R * 1.04));
     [-3000, 2000, 4000, 7500, 10000, 14000].forEach((y) => {
       const p = eclLocal(90 - A.PREC_RATE * (y - 2000), 90 - A.OBLIQUITY);
-      this._marker(j, p, 0x7fdbff, ['precessionCircle'], 0.1);
+      this._marker(j, p, 'prec', ['precessionCircle'], 0.1);
       this._label(y < 0 ? `기원전 ${-y}년` : `${y}년`, 'lbl-prec', ['precessionCircle'], j, p.clone().multiplyScalar(1.035));
     });
   }
@@ -507,20 +569,19 @@ export class SkyScene {
     // 태양
     const cv = document.createElement('canvas'); cv.width = cv.height = 128;
     const ctx = cv.getContext('2d');
-    const grd = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    grd.addColorStop(0, 'rgba(255,255,240,1)'); grd.addColorStop(0.18, 'rgba(255,236,150,1)');
-    grd.addColorStop(0.35, 'rgba(255,190,60,0.55)'); grd.addColorStop(1, 'rgba(255,150,30,0)');
-    ctx.fillStyle = grd; ctx.fillRect(0, 0, 128, 128);
-    const sm = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+    ctx.fillStyle = 'rgba(255,190,60,0.28)'; ctx.beginPath(); ctx.arc(64, 64, 46, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffc93c'; ctx.beginPath(); ctx.arc(64, 64, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#c47f00'; ctx.lineWidth = 3; ctx.stroke();
+    const sm = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false });
     this._surf(sm, 1);
     this.sunSprite = new THREE.Sprite(sm);
     this.sunSprite.scale.set(1.5, 1.5, 1);
     this._add(this.eqGroup, this.sunSprite, LY.SURF, ['sun']);
     this.sunLabel = this._label('태양', 'lbl-sun', ['sun'], this.eqGroup, new THREE.Vector3());
-    this.sunPathLine = this._dynLine(this.haGroup, COL.sun, 2, 180, ['sun', 'sunPath'], { opacity: 0.95 });
+    this.sunPathLine = this._dynLine(this.haGroup, 'sun', 2, 180, ['sun', 'sunPath'], { opacity: 0.95 });
 
     // 계절별 태양의 일주권
-    [[A.OBLIQUITY, 0xff8a65, '하지 (δ = +23.4°)'], [0, 0xffd166, '춘분·추분 (δ = 0°)'], [-A.OBLIQUITY, 0x6fb6ff, '동지 (δ = −23.4°)']].forEach(([d, c, t]) => {
+    [[A.OBLIQUITY, 'sumS', '하지 (δ = +23.4°)'], [0, 'eqx', '춘분·추분 (δ = 0°)'], [-A.OBLIQUITY, 'winS', '동지 (δ = −23.4°)']].forEach(([d, c, t]) => {
       this._add(this.haGroup, this._thick(curve((a) => eqLocal(a, d, R * 1.002), 0, 360, 200), c, 2.2), LY.SURF, ['seasonPaths']);
       this._label(t, 'lbl-season', ['seasonPaths'], this.haGroup, eqLocal(-12, d + 2.5));
     });
@@ -541,7 +602,8 @@ export class SkyScene {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8000 * 3), 3));
       geo.setDrawRange(0, 0);
-      const m = new THREE.LineBasicMaterial({ color: 0xe8e4d4, transparent: true, opacity: 0.8, depthWrite: false });
+      const m = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.8, depthWrite: false });
+      m.color.setHex(this._color(m, 'moonTrail'));
       this._surf(m, 0.8);
       const line = new THREE.Line(geo, m);
       line.frustumCulled = false;
@@ -551,16 +613,18 @@ export class SkyScene {
 
     // 행성
     const keys = A.PLANET_KEYS;
-    const pos = new Float32Array(keys.length * 3), col = new Float32Array(keys.length * 3), size = new Float32Array(keys.length);
+    const pos = new Float32Array(keys.length * 3), col = new Float32Array(keys.length * 3), col2 = new Float32Array(keys.length * 3), size = new Float32Array(keys.length);
     const sz = { mercury: 13, venus: 21, mars: 16, jupiter: 19, saturn: 16, uranus: 9, neptune: 8 };
     keys.forEach((k, i) => {
-      const c = new THREE.Color(A.PLANETS[k].color);
+      const c = new THREE.Color(A.PLANETS[k].color), c2 = new THREE.Color(A.PLANETS[k].ink);
       col.set([c.r, c.g, c.b], i * 3);
+      col2.set([c2.r, c2.g, c2.b], i * 3);
       size[i] = sz[k];
     });
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('aColor2', new THREE.BufferAttribute(col2, 3));
     g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
     this.planetMat = this._pointsMaterial(1);
     this.planetSurf = this._surf(this.planetMat, 1);
@@ -578,6 +642,7 @@ export class SkyScene {
       geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(8000 * 3), 3));
       geo.setDrawRange(0, 0);
       const m = new THREE.LineBasicMaterial({ color: A.PLANETS[k].color, transparent: true, opacity: 0.85, depthWrite: false });
+      this.themed.push({ mat: m, sky: new THREE.Color(A.PLANETS[k].color).getHex(), paper: new THREE.Color(A.PLANETS[k].ink).getHex() });
       this._surf(m, 0.85);
       const line = new THREE.Line(geo, m);
       line.frustumCulled = false;
@@ -590,22 +655,22 @@ export class SkyScene {
     const o = this.overlay;
     const K = ['$sel'];
     this.ov = {
-      vert: this._dynLine(o, COL.hor, 1.5, 180, K, { opacity: 0.75 }),
-      hour: this._dynLine(o, COL.eq, 1.5, 180, K, { opacity: 0.75 }),
-      diurnal: this._dynLine(o, COL.ha, 1.8, 180, K, { opacity: 0.85 }),
-      alt: this._dynLine(o, COL.altArc, 4.5, 64, K),
-      az: this._dynLine(o, COL.azArc, 4.5, 96, K),
-      dec: this._dynLine(o, COL.decArc, 4.5, 64, K),
-      ra: this._dynLine(o, COL.raArc, 4.5, 96, K),
-      ha: this._dynLine(o, COL.haArc, 4.5, 96, K),
-      lon: this._dynLine(o, COL.lonArc, 4.5, 96, K),
-      lat: this._dynLine(o, COL.latArc, 4.5, 64, K),
-      gl: this._dynLine(o, COL.glArc, 4.5, 96, K),
-      gb: this._dynLine(o, COL.gbArc, 4.5, 64, K),
-      pz: this._dynLine(o, COL.tri, 3.2, 64, K),
-      zx: this._dynLine(o, COL.tri, 3.2, 64, K),
-      px: this._dynLine(o, COL.tri, 3.2, 64, K),
-      err: this._dynLine(o, 0xff4081, 3, 64, K),
+      vert: this._dynLine(o, 'hor', 1.5, 180, K, { opacity: 0.75 }),
+      hour: this._dynLine(o, 'eq', 1.5, 180, K, { opacity: 0.75 }),
+      diurnal: this._dynLine(o, 'ha', 1.8, 180, K, { opacity: 0.85 }),
+      alt: this._dynLine(o, 'altArc', 4.5, 64, K),
+      az: this._dynLine(o, 'azArc', 4.5, 96, K),
+      dec: this._dynLine(o, 'decArc', 4.5, 64, K),
+      ra: this._dynLine(o, 'raArc', 4.5, 96, K),
+      ha: this._dynLine(o, 'haArc', 4.5, 96, K),
+      lon: this._dynLine(o, 'lonArc', 4.5, 96, K),
+      lat: this._dynLine(o, 'latArc', 4.5, 64, K),
+      gl: this._dynLine(o, 'glArc', 4.5, 96, K),
+      gb: this._dynLine(o, 'gbArc', 4.5, 64, K),
+      pz: this._dynLine(o, 'tri', 3.2, 64, K),
+      zx: this._dynLine(o, 'tri', 3.2, 64, K),
+      px: this._dynLine(o, 'tri', 3.2, 64, K),
+      err: this._dynLine(o, 'err', 3, 64, K),
     };
     const L = (cls) => this._label('', 'lbl-arc ' + cls, [], o, new THREE.Vector3());
     this.ovl = {
@@ -673,12 +738,17 @@ export class SkyScene {
     this._dirty = true;
   }
 
+  /** 천구 모형 시야각: 세로로 긴 화면에서도 천구가 양옆으로 잘리지 않게 넓힌다 */
+  _outsideFov() {
+    const a = (this.w || 1) / (this.h || 1);
+    return a >= 1 ? 42 : 2 * Math.atan(Math.tan(21 * A.DEG) / a) * A.RAD;
+  }
   setView(v) {
     if (this.view === 'outside' && v === 'observer') this._outsidePos.copy(this.camera.position);
     this.view = v;
     if (v === 'outside') {
       this.controls.enabled = true;
-      this.camera.fov = 42;
+      this.camera.fov = this._outsideFov();
       this.camera.up.set(0, 1, 0);
       this.camera.position.copy(this._outsidePos.lengthSq() > 1 ? this._outsidePos : new THREE.Vector3(20, 14, 26));
       this.controls.target.set(0, 0, 0);
@@ -688,6 +758,7 @@ export class SkyScene {
       this.controls.enabled = false;
       this._applyObserverCamera();
     }
+    this._applyTheme(v === 'outside');
     this._applyShow();
     this.emit('view', v);
   }
@@ -902,6 +973,8 @@ export class SkyScene {
     ctx.fillStyle = 'rgba(120,115,100,0.22)';
     [[c - 14, c - 16, 15], [c + 12, c - 6, 12], [c - 4, c + 14, 10], [c + 20, c + 18, 8]].forEach(([x, y, rr]) => { ctx.beginPath(); ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fill(); });
     ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = 'rgba(40,42,52,0.75)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(c, c, r, 0, Math.PI * 2); ctx.stroke();
     this.moonTex.needsUpdate = true;
   }
   /** 화면에서 달의 밝은 쪽이 태양을 향하도록 스프라이트를 돌린다 */
@@ -953,6 +1026,13 @@ export class SkyScene {
     const v = new THREE.Vector3();
     let k = 0;
     const cols = this.starPoints.geometry.attributes.aColor.array;
+    const paper = this.paper, bg = new THREE.Color(PAPER_BG);
+    // 밤하늘: 별 색 × 밝기(가산 혼합) / 종이: 바탕색 → 먹색 사이를 밝기만큼 섞는다
+    const put = (idx, i, f) => {
+      if (paper) {
+        col[idx] = bg.r + (STAR_INK[0] - bg.r) * f; col[idx + 1] = bg.g + (STAR_INK[1] - bg.g) * f; col[idx + 2] = bg.b + (STAR_INK[2] - bg.b) * f;
+      } else { col[idx] = cols[i * 3] * f; col[idx + 1] = cols[i * 3 + 1] * f; col[idx + 2] = cols[i * 3 + 2] * f; }
+    };
     STARS.forEach((s, i) => {
       v.copy(this.starLocal[i]).applyQuaternion(q);
       const br = A.clamp(1.15 - 0.22 * s.mag, 0.25, 1.0);
@@ -962,9 +1042,9 @@ export class SkyScene {
         const x = v.x * c - v.y * sn, y = v.x * sn + v.y * c;
         const f = br * Math.pow(1 - j / n, 0.6);
         pos[k * 3] = px; pos[k * 3 + 1] = py; pos[k * 3 + 2] = pz;
-        col[k * 3] = cols[i * 3] * pf; col[k * 3 + 1] = cols[i * 3 + 1] * pf; col[k * 3 + 2] = cols[i * 3 + 2] * pf; k++;
+        put(k * 3, i, pf); k++;
         pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = v.z;
-        col[k * 3] = cols[i * 3] * f; col[k * 3 + 1] = cols[i * 3 + 1] * f; col[k * 3 + 2] = cols[i * 3 + 2] * f; k++;
+        put(k * 3, i, f); k++;
         px = x; py = y; pz = v.z; pf = f;
       }
     });
@@ -1065,19 +1145,20 @@ export class SkyScene {
 
   _updateSky() {
     const observer = this.view === 'observer';
-    let night = new THREE.Color(observer ? 0x02040a : 0x04060d);
+    this._applyTheme(!observer);
+    let night = new THREE.Color(observer ? NIGHT_BG : PAPER_BG);
     let starF = 1;
     if (observer && this.show.atmosphere) {
       const h = this.sunHor.alt;
       const day = A.clamp((h + 12) / 18, 0, 1);
-      const dayCol = new THREE.Color(0x4f86c6), twi = new THREE.Color(0x26345e);
+      const dayCol = new THREE.Color(0x5b90cf), twi = new THREE.Color(0x2a3a66);
       night = day < 0.5 ? night.clone().lerp(twi, day * 2) : twi.clone().lerp(dayCol, (day - 0.5) * 2);
       starF = 1 - 0.94 * A.clamp((h + 14) / 12, 0, 1);
-      this.groundMat.color.set(0x0b1a12).lerp(new THREE.Color(0x284a2c), day);
-    } else this.groundMat.color.set(0x0b1a12);
+      this.groundMat.color.set(0x13251a).lerp(new THREE.Color(0x2c5032), day);
+    } else this.groundMat.color.set(0x13251a);
     this.renderer.setClearColor(night, 1);
     this.starSurf.base = starF;
-    this.mwSurf.base = 0.07 * starF;
+    this.mwSurf.base = (observer ? 0.07 : 0.045) * starF;
     this.planetSurf.base = Math.max(starF, 0.35);
     const scale = observer ? A.clamp(Math.pow(75 / this.obsFov, 0.55), 0.8, 2.4) : 1;
     this.starMat.uniforms.uScale.value = scale;
